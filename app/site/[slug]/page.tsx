@@ -2,6 +2,12 @@ import { notFound } from 'next/navigation';
 import { getDemoSite, getTemplateServices } from '@/lib/demo-sites';
 import { getSupabaseAdmin } from '@/lib/supabase';
 
+type CustomerSiteParams = {
+  params: {
+    slug: string;
+  };
+};
+
 async function getSite(slug: string) {
   const supabase = getSupabaseAdmin();
   if (supabase) {
@@ -11,9 +17,8 @@ async function getSite(slug: string) {
   return getDemoSite(slug);
 }
 
-export default async function CustomerSitePage({ params }: { params: Promise<{ slug: string }> | { slug: string } }) {
-  const resolvedParams = await params;
-  const site = await getSite(resolvedParams.slug);
+export default async function CustomerSitePage({ params }: CustomerSiteParams) {
+  const site = await getSite(params.slug);
   if (!site) notFound();
   const services = getTemplateServices(site.template);
   const pages = site.pages || ['Home'];
@@ -33,7 +38,7 @@ export default async function CustomerSitePage({ params }: { params: Promise<{ s
         {services.map((s: any) => <div className="service-card" key={s.title}><h3>{s.title}</h3><p>{s.text}</p></div>)}
       </div>
     </section>
-    {pages.filter((p: string) => p !== 'Home').map((p: string) => <section className="site-section" key={p}><h2>{p}</h2><p>This page is ready to be customized with images, text, products, testimonials, or forms based on the customer package.</p></section>)}
+    {pages.filter((p: string) => p !== 'Home').map((p: string) => <section className="site-section" key={p}><h2>{p}</h2><p>This page is ready to be customized with images, text, products, testimonials, booking details, forms, or customer-specific content.</p></section>)}
     <footer className="site-footer"><strong>{site.businessName}</strong><br/>{site.phone || ''} {site.phone && site.email ? '•' : ''} {site.email || ''}</footer>
   </main>;
 }
