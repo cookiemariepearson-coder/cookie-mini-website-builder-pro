@@ -1,11 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 const PUBLIC_FILE = /\.(.*)$/;
+const RESERVED_SUBDOMAINS = ['www', 'app', 'admin', 'builder', 'dashboard', 'api'];
+
+function cleanRootDomain(value?: string | null) {
+  const fallback = 'cookiesdigitalcreations.com';
+  const raw = (value || fallback).trim();
+  return raw
+    .replace(/^https?:\/\//i, '')
+    .replace(/^www\./i, '')
+    .split('/')[0]
+    .split(':')[0]
+    .toLowerCase();
+}
 
 export function middleware(req: NextRequest) {
   const url = req.nextUrl.clone();
-  const host = req.headers.get('host') || '';
-  const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'cookiesdigitalcreations.com';
+  const forwardedHost = req.headers.get('x-forwarded-host');
+  const hostHeader = forwardedHost || req.headers.get('host') || '';
+  const hostname = hostHeader.split(',')[0].trim().split(':')[0].toLowerCase();
+  const rootDomain = cleanRootDomain(process.env.NEXT_PUBLIC_ROOT_DOMAIN);
 
   if (
     url.pathname.startsWith('/_next') ||
@@ -19,21 +33,20 @@ export function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  const hostname = host.split(':')[0];
   const isLocalhost = hostname.includes('localhost') || hostname.includes('127.0.0.1');
 
-  // Local testing: mary.localhost:3000 will render /site/mary if your browser supports it.
   if (isLocalhost && hostname.endsWith('.localhost')) {
     const subdomain = hostname.replace('.localhost', '');
-    url.pathname = `/site/${subdomain}`;
-    return NextResponse.rewrite(url);
+    if (subdomain && !RESERVED_SUBDOMAINS.includes(subdomain)) {
+      url.pathname = `/site/${subdomain}`;
+      return NextResponse.rewrite(url);
+    }
   }
 
   // Production wildcard subdomains: customername.cookiesdigitalcreations.com
   if (hostname.endsWith(`.${rootDomain}`)) {
     const subdomain = hostname.replace(`.${rootDomain}`, '');
-    const reserved = ['www', 'app', 'admin', 'builder', 'dashboard'];
-    if (subdomain && !reserved.includes(subdomain)) {
+    if (subdomain && !RESERVED_SUBDOMAINS.includes(subdomain)) {
       url.pathname = `/site/${subdomain}`;
       return NextResponse.rewrite(url);
     }

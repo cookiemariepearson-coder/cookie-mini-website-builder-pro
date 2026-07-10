@@ -22,6 +22,7 @@ type PaidSite = {
 export default function CheckoutSuccessPage() {
   const [status, setStatus] = useState('Returning from subscription checkout...');
   const [link, setLink] = useState('');
+  const [pathLink, setPathLink] = useState('');
   const [site, setSite] = useState<PaidSite | null>(null);
   const [isPublishing, setIsPublishing] = useState(false);
   const [demoWarning, setDemoWarning] = useState(false);
@@ -44,9 +45,10 @@ export default function CheckoutSuccessPage() {
       const data = await response.json();
       if (!response.ok || !data.ok) throw new Error(data.error || 'Publishing failed');
       setLink(data.link);
+      setPathLink(data.pathLink || `/site/${payload.slug}`);
       setDemoWarning(Boolean(data.demo));
       setStatus('Subscription received. The website has been published.');
-      localStorage.setItem('cookie-builder-published-site', JSON.stringify({...payload, publishedLink: data.link}));
+      localStorage.setItem('cookie-builder-published-site', JSON.stringify({...payload, publishedLink: data.link, pathLink: data.pathLink}));
       localStorage.removeItem('cookie-builder-pending-site');
     } catch (error) {
       setStatus('Subscription checkout returned, but the site did not publish automatically. Keep this page open and contact Cookie Digital Creations so the site can be published manually.');
@@ -71,6 +73,8 @@ export default function CheckoutSuccessPage() {
     }
   }, []);
 
+  const directPath = pathLink || (site?.slug ? `https://www.cookiesdigitalcreations.com/site/${site.slug}` : '');
+
   return <main className="container section">
     <div className="card success-card">
       <span className="badge">Checkout Complete</span>
@@ -80,6 +84,7 @@ export default function CheckoutSuccessPage() {
       {link && <div className="notice">
         <strong>Customer website domain:</strong><br />
         <span style={{fontSize: 20}}>{link}</span>
+        <p className="small" style={{marginTop: 10}}>If the customer subdomain does not open yet, use the backup direct link below while DNS finishes or while wildcard routing is being checked.</p>
       </div>}
 
       {demoWarning && <div className="notice danger">
@@ -89,7 +94,8 @@ export default function CheckoutSuccessPage() {
       {site && <MiniPreview site={site} />}
 
       <div className="controls">
-        {link && <a className="btn gold" href={`https://${link}`} target="_blank" rel="noreferrer">Open Published Website</a>}
+        {directPath && <a className="btn gold" href={directPath} target="_blank" rel="noreferrer">Open Published Website</a>}
+        {link && <a className="btn secondary" href={`https://${link}`} target="_blank" rel="noreferrer">Open Customer Subdomain</a>}
         {site && !link && <button className="btn gold" disabled={isPublishing} onClick={() => publishPaidSite()}>{isPublishing ? 'Publishing...' : 'Publish Website Now'}</button>}
         <Link className="btn secondary" href="/builder">Build Another Website</Link>
       </div>

@@ -1,19 +1,36 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
 
+function cleanRootDomain(value?: string | null) {
+  const fallback = 'cookiesdigitalcreations.com';
+  const raw = (value || fallback).trim();
+  return raw
+    .replace(/^https?:\/\//i, '')
+    .replace(/^www\./i, '')
+    .split('/')[0]
+    .split(':')[0]
+    .toLowerCase();
+}
+
 export async function POST(request: Request) {
   const payload = await request.json();
-  const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'cookiesdigitalcreations.com';
-  const link = `${payload.slug}.${rootDomain}`;
+  const rootDomain = cleanRootDomain(process.env.NEXT_PUBLIC_ROOT_DOMAIN);
+  const slug = String(payload.slug || '').trim().toLowerCase();
+  const link = `${slug}.${rootDomain}`;
+  const pathLink = `https://www.${rootDomain}/site/${slug}`;
   const supabase = getSupabaseAdmin();
+
+  if (!slug) {
+    return NextResponse.json({ ok: false, error: 'Missing customer website slug.' }, { status: 400 });
+  }
 
   // Demo mode: without Supabase env variables, the builder still shows what the live link will be.
   if (!supabase) {
-    return NextResponse.json({ ok: true, demo: true, link });
+    return NextResponse.json({ ok: true, demo: true, link, pathLink });
   }
 
   const record = {
-    slug: payload.slug,
+    slug,
     business_name: payload.businessName,
     businessName: payload.businessName,
     template: payload.template,
@@ -37,5 +54,5 @@ export async function POST(request: Request) {
   if (error) {
     return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
   }
-  return NextResponse.json({ ok: true, link });
+  return NextResponse.json({ ok: true, link, pathLink });
 }
