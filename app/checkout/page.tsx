@@ -18,6 +18,21 @@ const checkoutUrls: Record<PlanKey, string | undefined> = {
   premium: process.env.NEXT_PUBLIC_PREMIUM_SUBSCRIPTION_CHECKOUT_URL
 };
 
+function normalizeCheckoutUrl(rawUrl?: string) {
+  if (!rawUrl) return '';
+  let url = rawUrl.trim();
+  if (!/^https?:\/\//i.test(url)) url = `https://${url}`;
+  try {
+    const parsed = new URL(url);
+    if (parsed.hostname.includes('gumroad.com') && !parsed.searchParams.has('wanted')) {
+      parsed.searchParams.set('wanted', 'true');
+    }
+    return parsed.toString();
+  } catch {
+    return '';
+  }
+}
+
 export default function CheckoutPage() {
   const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'cookiesdigitalcreations.com';
   const [site, setSite] = useState<PendingSite | null>(null);
@@ -42,7 +57,8 @@ export default function CheckoutPage() {
   const extraPagesTotal = extraPages * EXTRA_PAGE_PRICE;
   const price = getPlanPrice(planKey, selectedPageCount);
   const priceLabel = getBillingLabel(planKey, selectedPageCount);
-  const checkoutUrl = checkoutUrls[planKey];
+  const checkoutUrl = normalizeCheckoutUrl(checkoutUrls[planKey]);
+  const extraPageCheckoutUrl = normalizeCheckoutUrl(process.env.NEXT_PUBLIC_EXTRA_PAGE_SUBSCRIPTION_CHECKOUT_URL);
 
   function payNow() {
     if (!site) {
@@ -55,9 +71,21 @@ export default function CheckoutPage() {
       return;
     }
 
-    const updatedSite = { ...site, billing: 'subscription', extraPageCount: extraPages, price, priceLabel };
+    const updatedSite = { ...site, billing: 'subscription', extraPageCount: extraPages, price, priceLabel, paymentStartedAt: new Date().toISOString() };
     localStorage.setItem('cookie-builder-pending-site', JSON.stringify(updatedSite));
+    localStorage.setItem('cookie-builder-last-draft', JSON.stringify(updatedSite));
     window.location.href = checkoutUrl;
+  }
+
+  function openExtraPageCheckout() {
+    if (!extraPageCheckoutUrl) {
+      setMessage('Extra page checkout is not connected yet. Add NEXT_PUBLIC_EXTRA_PAGE_SUBSCRIPTION_CHECKOUT_URL in Vercel Environment Variables, then redeploy.');
+      return;
+    }
+
+    const updatedSite = site ? { ...site, billing: 'subscription', extraPageCount: extraPages, price, priceLabel, paymentStartedAt: new Date().toISOString() } : site;
+    if (updatedSite) localStorage.setItem('cookie-builder-pending-site', JSON.stringify(updatedSite));
+    window.open(extraPageCheckoutUrl, '_blank', 'noopener,noreferrer');
   }
 
   return (
@@ -70,18 +98,27 @@ export default function CheckoutPage() {
       <div className="checkout-layout">
         <section className="card">
           <span className="badge">Subscription checkout required before publishing</span>
-          <h1 style={{fontSize: 'clamp(38px, 6vw, 64px)'}}>Finish subscription checkout, then publish the website.</h1>
-          <p>The website is saved as a pending draft. After successful subscription checkout, the customer returns to the success page and the site is published to their subdomain.</p>
+          <h1 style={{fontSize: 'clamp(38px, 6vw, 64px)'}}>Finish subscription checkout, then return to publish.</h1>
+          <p>The website draft is saved in this browser before payment. After payment, Gumroad should return the customer to the success page so the site can publish and show the live subdomain.</p>
 
           {message && <div className="notice danger">{message}</div>}
 
+          <div className="notice" style={{marginBottom: 18}}>
+            <strong>Return URL for every Gumroad subscription:</strong><br />
+            <span className="small">https://www.cookiesdigitalcreations.com/checkout/success?paid=1</span>
+          </div>
+
           <div className="controls">
-            <button className="btn gold" onClick={payNow}>Pay {priceLabel} & Publish</button>
+            <button className="btn gold" onClick={payNow}>Pay {priceLabel} & Return to Publish</button>
             <Link className="btn secondary" href="/checkout/cancel">Cancel Checkout</Link>
           </div>
 
           {extraPages > 0 && <div className="notice" style={{marginTop: 18}}>
-            This order includes {extraPages} extra page{extraPages > 1 ? 's' : ''} at {`$${EXTRA_PAGE_PRICE}/month`} each. Make sure your checkout link collects the correct monthly total or collect the extra-page subscription add-on before publishing.
+            <strong>Extra page add-on required:</strong> This order includes {extraPages} extra page{extraPages > 1 ? 's' : ''} at {`$${EXTRA_PAGE_PRICE}/month`} each.
+            <div className="controls" style={{marginTop: 12}}>
+              <button className="btn secondary" onClick={openExtraPageCheckout}>Open Extra Page Add-On</button>
+            </div>
+            <p className="small" style={{marginTop: 10}}>Use the $10/month add-on for each extra page selected. If Gumroad lets customers choose quantity, set the quantity to {extraPages}. If not, purchase the add-on once per extra page or create separate add-on links later.</p>
           </div>}
         </section>
 
