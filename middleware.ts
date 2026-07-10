@@ -12,6 +12,7 @@ export function middleware(req: NextRequest) {
     url.pathname.startsWith('/api') ||
     url.pathname.startsWith('/builder') ||
     url.pathname.startsWith('/dashboard') ||
+    url.pathname.startsWith('/checkout') ||
     url.pathname.startsWith('/site') ||
     PUBLIC_FILE.test(url.pathname)
   ) {

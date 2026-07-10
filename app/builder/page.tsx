@@ -9,7 +9,7 @@ export default function BuilderPage() {
   const [step, setStep] = useState(0);
   const [template, setTemplate] = useState<TemplateKey>('local');
   const [plan, setPlan] = useState<PlanKey>('starter');
-  const [businessName, setBusinessName] = useState('My Business Name');
+  const [businessName, setBusinessName] = useState('');
   const [headline, setHeadline] = useState('A beautiful website created in minutes.');
   const [description, setDescription] = useState('Add your business details, services, and contact information so customers know what you offer.');
   const [phone, setPhone] = useState('');
@@ -17,12 +17,13 @@ export default function BuilderPage() {
   const [primaryColor, setPrimaryColor] = useState('#20172f');
   const [accentColor, setAccentColor] = useState('#c46a2d');
   const [selectedPages, setSelectedPages] = useState(['Home']);
-  const [publishedLink, setPublishedLink] = useState('');
+  const [formError, setFormError] = useState('');
   const maxPages = plans[plan].maxPages;
   const premiumUnlocksAll = plans[plan].allPages;
   const templateData = templates[template];
 
-  const slug = useMemo(() => slugify(businessName), [businessName]);
+  const cleanBusinessName = businessName.trim() || 'My Business Name';
+  const slug = useMemo(() => slugify(cleanBusinessName), [cleanBusinessName]);
 
   function applyTemplate(nextTemplate: TemplateKey) {
     setTemplate(nextTemplate);
@@ -49,19 +50,34 @@ export default function BuilderPage() {
     }
   }
 
-  async function publishSite() {
-    const payload = { slug, businessName, template, plan, headline, description, phone, email, primaryColor, accentColor, pages: selectedPages };
-    try {
-      const response = await fetch('/api/publish', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-      const data = await response.json();
-      setPublishedLink(data.link || `${slug}.cookiesdigitalcreations.com`);
-    } catch {
-      localStorage.setItem(`cookie-site-${slug}`, JSON.stringify(payload));
-      setPublishedLink(`${slug}.cookiesdigitalcreations.com`);
+  function continueToCheckout() {
+    if (!businessName.trim()) {
+      setFormError('Please add the customer business name before checkout.');
+      setStep(1);
+      return;
     }
+
+    const payload = {
+      slug,
+      businessName: cleanBusinessName,
+      template,
+      plan,
+      headline,
+      description,
+      phone,
+      email,
+      primaryColor,
+      accentColor,
+      pages: selectedPages,
+      price: plans[plan].price,
+      createdAt: new Date().toISOString()
+    };
+
+    localStorage.setItem('cookie-builder-pending-site', JSON.stringify(payload));
+    window.location.href = `/checkout?plan=${plan}&slug=${slug}`;
   }
 
-  const steps = ['Choose Template', 'Content', 'Design', 'Sections / Pages', 'Preview & Publish'];
+  const steps = ['Choose Template', 'Content', 'Design', 'Sections / Pages', 'Preview & Checkout'];
 
   return (
     <main className="builder-shell">
@@ -70,6 +86,7 @@ export default function BuilderPage() {
         <div className="stepper">
           {steps.map((s, i) => <button key={s} onClick={() => setStep(i)} className={`step ${step === i ? 'active' : ''}`}>{i + 1}. {s}</button>)}
         </div>
+        {formError && <div className="notice danger">{formError}</div>}
         {step === 0 && (
           <div>
             <h3>Choose Template</h3>
@@ -84,13 +101,14 @@ export default function BuilderPage() {
             <div className="field"><label>Package</label><select value={plan} onChange={e => changePlan(e.target.value as PlanKey)}>
               {Object.entries(plans).map(([key, p]) => <option value={key} key={key}>{p.name} - ${p.price} / {p.limitLabel}</option>)}
             </select></div>
+            <div className="notice">Customers choose the package first. The final button now goes to checkout before publishing.</div>
           </div>
         )}
         {step === 1 && (
           <div>
             <h3>Content Next</h3>
             <p className="small">Add the details customers will see on the website.</p>
-            <div className="field"><label>Business / Website Name</label><input value={businessName} onChange={e => setBusinessName(e.target.value)} /></div>
+            <div className="field"><label>Business / Website Name</label><input value={businessName} onChange={e => { setBusinessName(e.target.value); setFormError(''); }} placeholder="Example: Mary's Cleaning Service" /></div>
             <div className="field"><label>Headline</label><textarea value={headline} onChange={e => setHeadline(e.target.value)} /></div>
             <div className="field"><label>Description</label><textarea value={description} onChange={e => setDescription(e.target.value)} /></div>
             <div className="field"><label>Phone</label><input value={phone} onChange={e => setPhone(e.target.value)} /></div>
@@ -121,10 +139,15 @@ export default function BuilderPage() {
         )}
         {step === 4 && (
           <div>
-            <h3>Preview & Publish</h3>
-            <p className="small">Review the website, then publish it to a customer subdomain.</p>
-            <button className="btn gold" onClick={publishSite}>Publish Website</button>
-            {publishedLink && <div style={{marginTop:14}} className="notice">Published link: <strong>{publishedLink}</strong><br/>On Vercel + wildcard DNS, this opens the customer website.</div>}
+            <h3>Preview & Checkout</h3>
+            <p className="small">Review the website. When the customer is ready, send them to checkout before the site is published.</p>
+            <div className="checkout-summary">
+              <strong>{plans[plan].name} Website</strong>
+              <span>${plans[plan].price}</span>
+              <small>{plans[plan].limitLabel} included</small>
+            </div>
+            <button className="btn gold" onClick={continueToCheckout}>Continue to Checkout — ${plans[plan].price}</button>
+            <div style={{marginTop:14}} className="notice">No customer subdomain is shown until checkout is complete. After payment, the site publishes to <strong>{slug}.cookiesdigitalcreations.com</strong>.</div>
           </div>
         )}
         <div className="controls">
@@ -133,7 +156,7 @@ export default function BuilderPage() {
         </div>
       </aside>
       <section className="preview-pane">
-        <SitePreview businessName={businessName} headline={headline} description={description} primaryColor={primaryColor} accentColor={accentColor} template={template} pages={selectedPages} phone={phone} email={email} />
+        <SitePreview businessName={cleanBusinessName} headline={headline} description={description} primaryColor={primaryColor} accentColor={accentColor} template={template} pages={selectedPages} phone={phone} email={email} />
       </section>
     </main>
   );
