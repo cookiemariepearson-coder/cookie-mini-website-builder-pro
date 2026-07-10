@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { plans } from '@/lib/templates';
+import { plans, EXTRA_PAGE_PRICE } from '@/lib/templates';
 
 export default function HomePage() {
   return (
@@ -10,14 +10,14 @@ export default function HomePage() {
           <div className="navlinks">
             <Link href="/builder">Create Site</Link>
             <Link href="/dashboard">Dashboard</Link>
-            <a href="#pricing">Pricing</a>
+            <a href="#pricing">Subscriptions</a>
           </div>
         </nav>
         <section className="hero">
           <div>
             <span className="badge">Advanced multi-customer website platform</span>
-            <h1>Let customers build, pay, and publish websites on your domain.</h1>
-            <p>Customers can create a website, go to checkout, pay for the package they selected, and receive a live link like <strong>customername.cookiesdigitalcreations.com</strong>. You can also build websites for customers yourself.</p>
+            <h1>Let customers build, subscribe, and publish websites on your domain.</h1>
+            <p>Customers can create a website, go to subscription checkout, pay for the plan they selected, and receive a live link like <strong>customername.cookiesdigitalcreations.com</strong>. You can also build websites for customers yourself.</p>
             <div className="controls">
               <Link className="btn gold" href="/builder">Start Building</Link>
               <Link className="btn secondary" href="/site/maryscleaning">View Demo Site</Link>
@@ -32,7 +32,7 @@ export default function HomePage() {
               </div>
               <div className="mock-row">
                 <div className="mock-tile">Build</div>
-                <div className="mock-tile">Checkout</div>
+                <div className="mock-tile">Subscribe</div>
                 <div className="mock-tile">Publish</div>
               </div>
             </div>
@@ -41,18 +41,18 @@ export default function HomePage() {
       </div>
       <section className="section" id="pricing">
         <div className="container">
-          <h2>Pricing that matches what the customer receives</h2>
+          <h2>Subscription pricing that matches what the customer receives</h2>
           <div className="grid cards3">
             {Object.entries(plans).map(([key, plan]) => (
               <div className="card" key={key}>
                 <h3>{plan.name}</h3>
-                <div className="price">${plan.price}</div>
+                <div className="price">{plan.priceLabel}</div>
                 <p>{plan.description}</p>
                 <ul className="list">
-                  <li>{plan.limitLabel} included</li>
-                  <li>Checkout required before publishing</li>
+                  <li>{plan.limitLabel}</li>
+                  <li>Subscription checkout required before publishing</li>
                   <li>Live customer subdomain link</li>
-                  <li>{plan.allPages ? 'All current page options unlocked' : 'Extra pages can be sold separately'}</li>
+                  <li>{plan.allPages ? 'All current page options unlocked' : `Extra pages are $${EXTRA_PAGE_PRICE}/month per page`}</li>
                 </ul>
               </div>
             ))}
@@ -62,8 +62,8 @@ export default function HomePage() {
       <section className="section">
         <div className="container card">
           <h2>How customers use it</h2>
-          <p><strong>Choose Template</strong> → <strong>Content Next</strong> → <strong>Design Next</strong> → <strong>Sections / Pages Next</strong> → <strong>Preview & Checkout</strong> → <strong>Pay</strong> → <strong>Publish Website</strong>.</p>
-          <p>Starter is best for one-page sites. Business unlocks up to 3 pages. Premium unlocks all available page and section options in the builder. Extra pages can be charged at $25–$50 for Starter or Business, or quoted separately for future custom pages beyond the current builder options.</p>
+          <p><strong>Choose Template</strong> → <strong>Content Next</strong> → <strong>Design Next</strong> → <strong>Sections / Pages Next</strong> → <strong>Preview & Checkout</strong> → <strong>Subscribe</strong> → <strong>Publish Website</strong>.</p>
+          <p>Starter is $19/month and best for one-page sites. Business is $30/month and includes up to 3 pages. Premium is $50/month and unlocks all available page and section options. Extra pages for Starter or Business are {`$${EXTRA_PAGE_PRICE}/month per page`}.</p>
         </div>
       </section>
     </main>

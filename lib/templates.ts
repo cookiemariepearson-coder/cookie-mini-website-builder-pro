@@ -1,31 +1,60 @@
 export type PlanKey = 'starter' | 'business' | 'premium';
 
+export const EXTRA_PAGE_PRICE = 10;
+
 export const plans = {
   starter: {
-    name: 'Starter',
-    price: 19,
+    name: 'Starter Subscription',
+    monthlyPrice: 19,
+    defaultBilling: 'subscription',
     maxPages: 1,
     allPages: false,
-    limitLabel: '1 page',
-    description: 'One-page website with business details, service cards, call-to-action, and contact section.'
+    limitLabel: '1 page included',
+    priceLabel: '$19/month',
+    description: 'One-page website with business details, service cards, call-to-action, contact section, monthly hosted access, and edit/publish access while subscribed.'
   },
   business: {
-    name: 'Business',
-    price: 149,
+    name: 'Business Subscription',
+    monthlyPrice: 30,
+    defaultBilling: 'subscription',
     maxPages: 3,
     allPages: false,
-    limitLabel: 'up to 3 pages',
-    description: 'Up to 3 pages with stronger layout, service details, about section, testimonials, and gallery area.'
+    limitLabel: 'up to 3 pages included',
+    priceLabel: '$30/month',
+    description: 'Up to 3 pages with stronger layout, service details, about section, testimonials/gallery area, monthly hosted access, and edit/publish access while subscribed.'
   },
   premium: {
-    name: 'Premium',
-    price: 199,
+    name: 'Premium Subscription',
+    monthlyPrice: 50,
+    defaultBilling: 'subscription',
     maxPages: 999,
     allPages: true,
-    limitLabel: 'all available pages/sections',
-    description: 'All available page and section options with custom sections, advanced page choices, stronger homepage, and optional custom domain help.'
+    limitLabel: 'all available pages/sections included',
+    priceLabel: '$50/month',
+    description: 'All available page and section options with stronger premium layout, advanced page choices, monthly hosted access, and edit/publish access while subscribed.'
   }
 } as const;
+
+export function getExtraPageCount(plan: PlanKey, selectedPageCount: number) {
+  const item = plans[plan];
+  if (item.allPages) return 0;
+  return Math.max(0, selectedPageCount - item.maxPages);
+}
+
+export function getPlanPrice(plan: PlanKey, selectedPageCount: number = plans[plan].maxPages as number) {
+  const extraPages = getExtraPageCount(plan, selectedPageCount);
+  return plans[plan].monthlyPrice + extraPages * EXTRA_PAGE_PRICE;
+}
+
+export function getBillingLabel(plan: PlanKey, selectedPageCount: number = plans[plan].maxPages as number) {
+  const price = getPlanPrice(plan, selectedPageCount);
+  const extraPages = getExtraPageCount(plan, selectedPageCount);
+  return extraPages > 0 ? `$${price}/month incl. ${extraPages} extra page${extraPages > 1 ? 's' : ''}` : `$${price}/month`;
+}
+
+export function getBaseBillingLabel(plan: PlanKey) {
+  return `$${plans[plan].monthlyPrice}/month subscription`;
+}
 
 export const templates = {
   local: {

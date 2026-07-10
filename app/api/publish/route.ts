@@ -25,6 +25,10 @@ export async function POST(request: Request) {
     primaryColor: payload.primaryColor,
     accentColor: payload.accentColor,
     pages: payload.pages,
+    billing: payload.billing || 'subscription',
+    extra_page_count: payload.extraPageCount || 0,
+    monthly_price: payload.price || null,
+    price_label: payload.priceLabel || null,
     status: 'published',
     updated_at: new Date().toISOString()
   };

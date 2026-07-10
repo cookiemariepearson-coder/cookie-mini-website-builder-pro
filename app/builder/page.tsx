@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { plans, templates, slugify, type PlanKey, type TemplateKey } from '@/lib/templates';
+import { plans, templates, slugify, getPlanPrice, getBillingLabel, getExtraPageCount, EXTRA_PAGE_PRICE, type PlanKey, type TemplateKey } from '@/lib/templates';
 
 const pageOptions = ['Home', 'About', 'Services', 'Products', 'Gallery', 'Testimonials', 'Contact', 'FAQ'];
 
@@ -20,6 +20,9 @@ export default function BuilderPage() {
   const [formError, setFormError] = useState('');
   const maxPages = plans[plan].maxPages;
   const premiumUnlocksAll = plans[plan].allPages;
+  const extraPageCount = getExtraPageCount(plan, selectedPages.length);
+  const currentPrice = getPlanPrice(plan, selectedPages.length);
+  const currentBillingLabel = getBillingLabel(plan, selectedPages.length);
   const templateData = templates[template];
 
   const cleanBusinessName = businessName.trim() || 'My Business Name';
@@ -33,10 +36,11 @@ export default function BuilderPage() {
 
   function changePlan(nextPlan: PlanKey) {
     setPlan(nextPlan);
+    // Keep the customer's selected pages when switching plans. Starter and Business
+    // may include extra pages at $10/month per page; Premium includes all available pages.
     setSelectedPages(currentPages => {
       const orderedPages = pageOptions.filter(page => currentPages.includes(page));
-      const withHome = orderedPages.includes('Home') ? orderedPages : ['Home', ...orderedPages];
-      return plans[nextPlan].allPages ? withHome : withHome.slice(0, plans[nextPlan].maxPages);
+      return orderedPages.includes('Home') ? orderedPages : ['Home', ...orderedPages];
     });
   }
 
@@ -45,7 +49,6 @@ export default function BuilderPage() {
     if (selectedPages.includes(page)) {
       setSelectedPages(selectedPages.filter(p => p !== page));
     } else {
-      if (!premiumUnlocksAll && selectedPages.length >= maxPages) return;
       setSelectedPages([...selectedPages, page]);
     }
   }
@@ -69,7 +72,10 @@ export default function BuilderPage() {
       primaryColor,
       accentColor,
       pages: selectedPages,
-      price: plans[plan].price,
+      billing: 'subscription',
+      extraPageCount,
+      price: currentPrice,
+      priceLabel: currentBillingLabel,
       createdAt: new Date().toISOString()
     };
 
@@ -98,10 +104,10 @@ export default function BuilderPage() {
                 </button>
               ))}
             </div>
-            <div className="field"><label>Package</label><select value={plan} onChange={e => changePlan(e.target.value as PlanKey)}>
-              {Object.entries(plans).map(([key, p]) => <option value={key} key={key}>{p.name} - ${p.price} / {p.limitLabel}</option>)}
+            <div className="field"><label>Subscription</label><select value={plan} onChange={e => changePlan(e.target.value as PlanKey)}>
+              {Object.entries(plans).map(([key, p]) => <option value={key} key={key}>{p.name} - {p.priceLabel} / {p.limitLabel}</option>)}
             </select></div>
-            <div className="notice">Customers choose the package first. The final button now goes to checkout before publishing.</div>
+            <div className="notice">All plans are subscriptions. Starter is $19/month, Business is $30/month, and Premium is $50/month. Extra pages for Starter or Business are {`$${EXTRA_PAGE_PRICE}/month per page`}.</div>
           </div>
         )}
         {step === 1 && (
@@ -126,15 +132,15 @@ export default function BuilderPage() {
         {step === 3 && (
           <div>
             <h3>Sections / Pages Next</h3>
-            <p className="small">{premiumUnlocksAll ? 'Premium includes every available page/section option shown here. Select all the customer needs.' : `${plans[plan].name} includes up to ${maxPages} page${maxPages > 1 ? 's' : ''}. More pages should be an add-on or upgraded package.`}</p>
+            <p className="small">{premiumUnlocksAll ? 'Premium includes every available page/section option shown here. Select all the customer needs.' : `${plans[plan].name} includes ${maxPages} page${maxPages > 1 ? 's' : ''}. Extra selected pages are $${EXTRA_PAGE_PRICE}/month per page.`}</p>
             <div className="pages-grid">
               {pageOptions.map(page => (
-                <button key={page} onClick={() => togglePage(page)} className={`option ${selectedPages.includes(page) ? 'active' : ''}`} disabled={!selectedPages.includes(page) && !premiumUnlocksAll && selectedPages.length >= maxPages}>
-                  <strong>{page}</strong><br/><span className="small">{page === 'Home' ? 'Required' : selectedPages.includes(page) ? 'Included' : (!premiumUnlocksAll && selectedPages.length >= maxPages) ? 'Upgrade needed' : 'Add page'}</span>
+                <button key={page} onClick={() => togglePage(page)} className={`option ${selectedPages.includes(page) ? 'active' : ''}`}>
+                  <strong>{page}</strong><br/><span className="small">{page === 'Home' ? 'Required' : selectedPages.includes(page) ? 'Selected' : (!premiumUnlocksAll && selectedPages.length >= maxPages) ? `$${EXTRA_PAGE_PRICE}/mo extra` : 'Add page'}</span>
                 </button>
               ))}
             </div>
-            <div style={{marginTop: 14}} className="notice">{premiumUnlocksAll ? 'Premium unlocks all page/section choices in this builder. Future custom pages beyond these options can still be quoted separately.' : 'Extra page idea: charge $25 simple page, $50 detailed page, or upgrade the customer to Premium for all available page/section options.'}</div>
+            <div style={{marginTop: 14}} className="notice">{premiumUnlocksAll ? 'Premium unlocks all page/section choices in this builder for $50/month.' : `Extra pages selected: ${extraPageCount}. Extra page add-on: $${EXTRA_PAGE_PRICE}/month per page.`}</div>
           </div>
         )}
         {step === 4 && (
@@ -143,10 +149,10 @@ export default function BuilderPage() {
             <p className="small">Review the website. When the customer is ready, send them to checkout before the site is published.</p>
             <div className="checkout-summary">
               <strong>{plans[plan].name} Website</strong>
-              <span>${plans[plan].price}</span>
-              <small>{plans[plan].limitLabel} included</small>
+              <span>{currentBillingLabel}</span>
+              <small>{plans[plan].limitLabel}{extraPageCount > 0 ? ` + ${extraPageCount} extra page${extraPageCount > 1 ? 's' : ''} at $${EXTRA_PAGE_PRICE}/month each` : ''}</small>
             </div>
-            <button className="btn gold" onClick={continueToCheckout}>Continue to Checkout — ${plans[plan].price}</button>
+            <button className="btn gold" onClick={continueToCheckout}>Continue to Checkout — {currentBillingLabel}</button>
             <div style={{marginTop:14}} className="notice">No customer subdomain is shown until checkout is complete. After payment, the site publishes to <strong>{slug}.cookiesdigitalcreations.com</strong>.</div>
           </div>
         )}
@@ -181,7 +187,7 @@ function SitePreview(props: any) {
         {services.map((s: any) => <div className="service-card" key={s.title}><h3>{s.title}</h3><p>{s.text}</p></div>)}
       </div>
     </section>
-    {props.pages.filter((p: string) => p !== 'Home').map((p: string) => <section className="site-section" key={p}><h2>{p}</h2><p>This page is included in the selected package and can be customized for the customer.</p></section>)}
+    {props.pages.filter((p: string) => p !== 'Home').map((p: string) => <section className="site-section" key={p}><h2>{p}</h2><p>This page is included in the selected subscription or added as an extra-page upgrade and can be customized for the customer.</p></section>)}
     <footer className="site-footer"><strong>{props.businessName}</strong><br/>{props.phone || 'Add phone'} • {props.email || 'Add email'}</footer>
   </div>;
 }

@@ -11,7 +11,7 @@ export default function CheckoutSuccessPage() {
     async function publishPaidSite() {
       const saved = localStorage.getItem('cookie-builder-pending-site');
       if (!saved) {
-        setStatus('Payment was completed, but no website draft was found on this device. Please contact Cookie Digital Creations to publish the site manually.');
+        setStatus('Subscription checkout was completed, but no website draft was found on this device. Please contact Cookie Digital Creations to publish the site manually.');
         return;
       }
 
@@ -25,10 +25,10 @@ export default function CheckoutSuccessPage() {
         const data = await response.json();
         if (!response.ok || !data.ok) throw new Error(data.error || 'Publishing failed');
         setLink(data.link);
-        setStatus('Payment received. The website has been published.');
+        setStatus('Subscription received. The website has been published.');
         localStorage.removeItem('cookie-builder-pending-site');
       } catch (error) {
-        setStatus('Payment was completed, but the site did not publish automatically. Please contact Cookie Digital Creations so the site can be published manually.');
+        setStatus('Subscription checkout was completed, but the site did not publish automatically. Please contact Cookie Digital Creations so the site can be published manually.');
       }
     }
     publishPaidSite();

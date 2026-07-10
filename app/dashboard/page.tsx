@@ -11,7 +11,7 @@ export default function DashboardPage() {
       {sites.map((site: any) => <div className="card" key={site.slug}>
         <h3>{site.businessName}</h3>
         <p>{site.slug}.cookiesdigitalcreations.com</p>
-        <ul className="list"><li>{site.plan} package</li><li>{site.pages.length} page(s)</li><li>Published demo</li></ul>
+        <ul className="list"><li>{site.plan} subscription</li><li>{site.pages.length} page(s)</li><li>Published demo</li></ul>
         <div className="controls"><Link className="btn secondary" href={`/site/${site.slug}`}>View Site</Link><Link className="btn" href="/builder">Edit / Rebuild</Link></div>
       </div>)}
     </div>
