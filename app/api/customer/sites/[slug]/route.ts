@@ -1,18 +1,39 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
+import { getBillingLabel, getExtraPageCount, getPlanPrice, type PlanKey } from '@/lib/templates';
+
+export const dynamic = 'force-dynamic';
 
 function normalizeEmail(value: string | null) {
   return String(value || '').trim().toLowerCase();
 }
 
+function normalizePages(value: any) {
+  if (Array.isArray(value)) return value.length ? value : ['Home'];
+  if (typeof value === 'string') {
+    try {
+      const parsed = JSON.parse(value);
+      if (Array.isArray(parsed)) return parsed.length ? parsed : ['Home'];
+    } catch {}
+  }
+  return ['Home'];
+}
+
+function normalizePlan(value: any): PlanKey {
+  return value === 'business' || value === 'premium' ? value : 'starter';
+}
+
 function publicSiteFields(site: any) {
+  const plan = normalizePlan(site.plan);
+  const pages = normalizePages(site.pages);
+  const extra_page_count = Number(site.extra_page_count || getExtraPageCount(plan, pages.length) || 0);
   return {
     id: site.id,
     slug: site.slug,
     businessName: site.businessName || site.business_name || '',
     business_name: site.business_name || site.businessName || '',
     template: site.template || 'local',
-    plan: site.plan || 'starter',
+    plan,
     billing: site.billing || 'subscription',
     status: site.status || 'published',
     headline: site.headline || '',
@@ -21,10 +42,10 @@ function publicSiteFields(site: any) {
     email: site.email || '',
     primaryColor: site.primaryColor || '#20172f',
     accentColor: site.accentColor || '#c46a2d',
-    pages: Array.isArray(site.pages) ? site.pages : ['Home'],
-    extra_page_count: site.extra_page_count || 0,
-    monthly_price: site.monthly_price || 0,
-    price_label: site.price_label || '',
+    pages,
+    extra_page_count,
+    monthly_price: site.monthly_price || getPlanPrice(plan, pages.length),
+    price_label: site.price_label || getBillingLabel(plan, pages.length),
     updated_at: site.updated_at,
     created_at: site.created_at
   };
@@ -34,7 +55,7 @@ function allowedCustomerUpdateFields(payload: any) {
   const update: Record<string, any> = {};
   const fields = [
     'businessName', 'business_name', 'headline', 'description', 'phone', 'email',
-    'primaryColor', 'accentColor', 'pages', 'template'
+    'primaryColor', 'accentColor', 'pages', 'template', 'extra_page_count', 'monthly_price', 'price_label'
   ];
 
   for (const field of fields) {
@@ -43,6 +64,18 @@ function allowedCustomerUpdateFields(payload: any) {
 
   if ('businessName' in payload) update.business_name = payload.businessName;
   if ('business_name' in payload) update.businessName = payload.business_name;
+
+  const plan = normalizePlan(payload.plan || payload.currentPlan);
+  const pages = normalizePages(payload.pages);
+  if ('pages' in payload) {
+    update.pages = pages;
+    const calculatedExtraPages = getExtraPageCount(plan, pages.length);
+    const paidExtraPages = Number(payload.extra_page_count || 0);
+    update.extra_page_count = Math.max(calculatedExtraPages, paidExtraPages);
+    update.monthly_price = payload.monthly_price || getPlanPrice(plan, pages.length);
+    update.price_label = payload.price_label || getBillingLabel(plan, pages.length);
+  }
+
   update.updated_at = new Date().toISOString();
   return update;
 }
@@ -77,7 +110,7 @@ export async function GET(request: Request, { params }: { params: { slug: string
     return NextResponse.json({ ok: false, error: result.error || 'Website not found.' }, { status: 404 });
   }
 
-  return NextResponse.json({ ok: true, site: publicSiteFields(result.site) });
+  return NextResponse.json({ ok: true, site: publicSiteFields(result.site) }, { headers: { 'Cache-Control': 'no-store' } });
 }
 
 export async function PUT(request: Request, { params }: { params: { slug: string } }) {
@@ -92,7 +125,7 @@ export async function PUT(request: Request, { params }: { params: { slug: string
   const supabase = getSupabaseAdmin();
   if (!supabase) return NextResponse.json({ ok: false, error: 'Supabase is not connected.' }, { status: 500 });
 
-  const update = allowedCustomerUpdateFields(payload);
+  const update = allowedCustomerUpdateFields({ ...payload, currentPlan: result.site.plan });
   const { error } = await supabase
     .from('websites')
     .update(update)
@@ -106,5 +139,5 @@ export async function PUT(request: Request, { params }: { params: { slug: string
     .eq('slug', params.slug)
     .single();
 
-  return NextResponse.json({ ok: true, site: data ? publicSiteFields(data) : null });
+  return NextResponse.json({ ok: true, site: data ? publicSiteFields(data) : null }, { headers: { 'Cache-Control': 'no-store' } });
 }

@@ -1,37 +1,37 @@
-# Cookie Mini Website Builder Pro — Customer Dashboard Upgrade
+# Cookie Mini Website Builder Pro — Customer Edit + Extra Page Checkout Fix
 
-This update adds the next upgrade: a customer dashboard and customer edit flow.
+This update fixes the customer dashboard edit flow.
 
-## New pages
+## What changed
 
-- `/customer` — customer dashboard/login by email + website slug
-- `/my-website` — redirects to `/customer`
-- `/customer/edit/[slug]` — customer website editor
+- Customer edits now save and republish to Supabase.
+- Published customer websites are forced dynamic/no-cache so saved edits show after refresh.
+- Changing templates now updates the live preview and saved published site.
+- Customer edit page now includes a live preview.
+- Extra pages are handled automatically from the customer editor.
+- If Starter or Business customers add pages beyond their plan limit, the $10/month extra page add-on checkout opens directly.
+- Premium customers can still select all pages without extra page checkout.
 
-## New API route
+## Required Vercel Environment Variable
 
-- `/api/customer/sites/[slug]`
-  - `GET` loads a customer site when the email matches the website record
-  - `PUT` lets the customer edit basic website details
+Make sure this exists in Vercel:
 
-## What customers can do
+NEXT_PUBLIC_EXTRA_PAGE_SUBSCRIPTION_CHECKOUT_URL
 
-- Enter their email and website subdomain/slug
-- Open their live website
-- Open the backup direct website link
-- View plan, status, monthly price, and page count
-- Edit business name, headline, description, phone, email, colors, template, and pages
-- Save and republish changes
+Value: your Gumroad $10/month extra page add-on checkout link. It should start with https://
 
-## Upload instructions
+## Gumroad return link
+
+Keep the same Gumroad return/content link for all subscriptions and the extra page add-on:
+
+https://www.cookiesdigitalcreations.com/checkout/success?paid=1
+
+## Upload steps
 
 1. Unzip this package.
-2. In GitHub, open `cookie-mini-website-builder-pro`.
-3. Upload the inside files/folders, not the ZIP itself.
-4. Commit changes.
-5. Wait for Vercel to deploy and show Ready.
-6. Test: `https://www.cookiesdigitalcreations.com/customer`
+2. Upload the inside files/folders to GitHub.
+3. Commit changes.
+4. Let Vercel redeploy.
+5. Test https://www.cookiesdigitalcreations.com/customer
 
-## Notes
-
-This is a simple customer access dashboard using the customer's email + website slug. A future upgrade can add full customer accounts/password login.
+Do not change IONOS, Supabase, or Vercel domain settings for this update.
