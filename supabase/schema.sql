@@ -55,3 +55,7 @@ create policy "Owners can update own websites"
 
 -- NOTE: The starter API route uses SUPABASE_SERVICE_ROLE_KEY for admin publishing.
 -- For a full production version, replace admin upsert with authenticated user checks and subscription payment verification.
+
+
+create index if not exists websites_status_idx on public.websites(status);
+comment on table public.websites is 'Customer websites published by Cookie Mini Website Builder Pro.';
