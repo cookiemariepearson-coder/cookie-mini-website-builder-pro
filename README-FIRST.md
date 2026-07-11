@@ -1,25 +1,24 @@
-# Cookie Mini Website Builder Pro — Customer Edit + Template + Page Fix
+# Cookie Mini Website Builder Pro — Customer Editor Major Fix
 
-Upload the inside files/folders of this package to GitHub, commit changes, and let Vercel redeploy.
+Upload the inside files/folders in this package to the GitHub repo:
+
+cookie-mini-website-builder-pro
+
+Then commit changes and wait for Vercel to redeploy.
 
 This update fixes:
-- Customer edit form saves and republishes content wording.
-- Template changes are visibly different on preview and public sites.
-- Published website top navigation links are clickable anchor links.
-- Page add/remove is normalized so Home stays required and duplicate/broken page arrays are avoided.
-- Extra pages are handled automatically through the $10/month extra page checkout link.
-- Removed wording that says customers need to contact Cookie Digital Creations just to unlock extra pages.
+- Customer content editing now stays in the form and saves more reliably.
+- The editor uses a side-by-side layout so the live preview stays visible while editing.
+- The description box is larger for longer wording.
+- Template selection now changes colors, artwork, and visual layout.
+- The top hero no longer shows the phone number button; it only shows Contact Now.
+- Contact Now opens the customer email when an email is entered.
+- Page links at the top of the published website are clickable anchor links.
+- Business and Starter plan extra-page limits now trigger the $10/month extra-page checkout when a customer tries to add more than their included pages.
+- The extra page wording no longer tells customers to contact Cookie Digital Creations first.
 
-Required Vercel environment variables:
-- NEXT_PUBLIC_EXTRA_PAGE_SUBSCRIPTION_CHECKOUT_URL
-- NEXT_PUBLIC_ROOT_DOMAIN
-- Supabase variables already added earlier
-- Gumroad checkout variables already added earlier
+Required Vercel environment variable for extra page checkout:
+NEXT_PUBLIC_EXTRA_PAGE_SUBSCRIPTION_CHECKOUT_URL
 
-After deploy, test:
-1. /customer
-2. Edit Website Details
-3. Change headline/description and click Save & Republish
-4. Change template and click Save & Republish
-5. Add/remove pages and click Save & Republish
-6. Open the subdomain and refresh the page
+Keep the Gumroad return link for every product/add-on as:
+https://www.cookiesdigitalcreations.com/checkout/success?paid=1

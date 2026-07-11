@@ -153,3 +153,232 @@ textarea { min-height: 88px; resize: vertical; }
   .template-realestate .site-hero:after { margin-top:18px; }
   .template-nonprofit .service-card { grid-template-columns:1fr; }
 }
+
+/* Customer editor major usability upgrade */
+.customer-edit-layout {
+  display: grid;
+  grid-template-columns: minmax(360px, .78fr) minmax(520px, 1.22fr);
+  gap: 20px;
+  align-items: start;
+  margin-top: 18px;
+}
+.customer-edit-controls { display: grid; gap: 18px; min-width: 0; }
+.customer-edit-preview {
+  position: sticky;
+  top: 18px;
+  max-height: calc(100vh - 36px);
+  overflow: auto;
+}
+.preview-headline-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: flex-start;
+  margin-bottom: 10px;
+}
+.large-textarea { min-height: 128px; line-height: 1.55; }
+.tall-textarea { min-height: 210px; }
+.template-mini-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 12px 0;
+}
+.template-mini {
+  display: grid;
+  grid-template-columns: 50px 1fr;
+  align-items: center;
+  gap: 10px;
+  text-align: left;
+  border: 1px solid var(--line);
+  background: #fff;
+  border-radius: 18px;
+  padding: 10px;
+  cursor: pointer;
+  font: inherit;
+  color: var(--ink);
+}
+.template-mini span {
+  width: 50px;
+  height: 50px;
+  border-radius: 16px;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  font-size: 24px;
+  box-shadow: 0 10px 26px rgba(32, 23, 47, .18);
+}
+.template-mini.active {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(196,106,45,.16);
+}
+.customer-edit-preview .site-preview { max-width: 100%; }
+.customer-edit-preview .site-hero h1 { font-size: clamp(30px, 4vw, 54px); }
+.customer-edit-preview .site-section { padding: 30px; }
+
+/* Stronger published/customer-site visual system */
+.site-header { gap: 18px; }
+.site-top-links a { text-decoration: none; cursor: pointer; }
+.published-site .site-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(260px, .85fr);
+  gap: 28px;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+}
+.published-site .site-hero:before {
+  content: '';
+  position: absolute;
+  inset: -80px -60px auto auto;
+  width: 260px;
+  height: 260px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.13);
+  pointer-events: none;
+}
+.hero-content-block { position: relative; z-index: 2; min-width: 0; }
+.hero-description {
+  max-width: 760px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.72;
+  font-size: clamp(16px, 1.4vw, 20px);
+}
+.template-art-card {
+  position: relative;
+  z-index: 2;
+  min-height: 280px;
+  border-radius: 34px;
+  border: 1px solid rgba(255,255,255,.28);
+  background:
+    radial-gradient(circle at 24% 18%, rgba(255,255,255,.32), transparent 28%),
+    linear-gradient(145deg, rgba(255,255,255,.18), rgba(255,255,255,.07));
+  backdrop-filter: blur(7px);
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 10px;
+  text-align: center;
+  padding: 28px;
+  box-shadow: 0 30px 80px rgba(0,0,0,.18);
+  overflow: hidden;
+}
+.template-art-card:before,
+.template-art-card:after {
+  content: '';
+  position: absolute;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.22);
+  pointer-events: none;
+}
+.template-art-card:before { width: 190px; height: 190px; left: -60px; bottom: -72px; }
+.template-art-card:after { width: 120px; height: 120px; right: -40px; top: -34px; }
+.template-art-icon {
+  font-size: 64px;
+  width: 112px;
+  height: 112px;
+  border-radius: 32px;
+  display: grid;
+  place-items: center;
+  background: rgba(255,255,255,.9);
+  color: var(--ink);
+  box-shadow: 0 22px 44px rgba(0,0,0,.18);
+}
+.template-art-card strong { font-size: 25px; line-height: 1.15; }
+.template-art-card span { opacity: .9; font-weight: 800; }
+.template-art-lines { display: grid; gap: 8px; width: min(220px, 80%); margin-top: 8px; }
+.template-art-lines i { display: block; height: 8px; border-radius: 999px; background: rgba(255,255,255,.42); }
+.template-art-lines i:nth-child(2) { width: 76%; justify-self: center; }
+.template-art-lines i:nth-child(3) { width: 52%; justify-self: center; }
+.contact-panel a, .site-footer a { color: inherit; font-weight: 900; }
+
+/* Make every template visibly different */
+.template-local .site-hero { grid-template-columns: 1fr .72fr; }
+.template-local .template-art-card { border-radius: 20px; transform: rotate(-1deg); }
+.template-local .service-grid { grid-template-columns: repeat(3, 1fr); }
+.template-local .service-card { border-top: 6px solid var(--accent); }
+
+.template-restaurant .site-hero {
+  text-align: left;
+  background-blend-mode: multiply;
+}
+.template-restaurant .template-art-card {
+  border-radius: 999px 999px 42px 42px;
+  min-height: 330px;
+  transform: rotate(.8deg);
+}
+.template-restaurant .template-art-icon { border-radius: 999px; }
+.template-restaurant .service-card { box-shadow: 0 18px 40px rgba(127,29,29,.12); }
+.template-restaurant .site-section { background: repeating-linear-gradient(45deg,#fff7ef,#fff7ef 18px,#fff 18px,#fff 36px); }
+
+.template-realestate .site-hero {
+  grid-template-columns: minmax(0, 1fr) 360px;
+}
+.template-realestate .template-art-card {
+  border-radius: 12px;
+  border-left: 10px solid rgba(255,255,255,.48);
+}
+.template-realestate .template-art-icon { border-radius: 12px; }
+.template-realestate .service-grid { grid-template-columns: repeat(3, 1fr); }
+.template-realestate .service-card { background: #fff; border-left: 8px solid var(--accent); border-radius: 8px; }
+
+.template-wellness .site-hero {
+  border-radius: 0 0 90px 90px;
+}
+.template-wellness .template-art-card {
+  border-radius: 50px;
+  background:
+    radial-gradient(circle at 30% 20%, rgba(255,255,255,.42), transparent 30%),
+    linear-gradient(145deg, rgba(255,255,255,.24), rgba(255,255,255,.1));
+}
+.template-wellness .template-art-icon { border-radius: 50%; }
+.template-wellness .service-grid { grid-template-columns: repeat(3, 1fr); }
+.template-wellness .service-card { border-radius: 34px; background: #f6fff2; }
+
+.template-portfolio .site-hero {
+  min-height: 500px;
+  align-items: end;
+}
+.template-portfolio .template-art-card {
+  border-radius: 24px;
+  background:
+    linear-gradient(135deg, rgba(168,85,247,.35), rgba(255,255,255,.08)),
+    repeating-linear-gradient(90deg, rgba(255,255,255,.08), rgba(255,255,255,.08) 18px, transparent 18px, transparent 32px);
+}
+.template-portfolio .template-art-icon { background: #fff; color: #111827; }
+.template-portfolio .site-top-links a { background: rgba(168,85,247,.24); }
+.template-portfolio .service-grid { grid-template-columns: 1fr 1fr 1fr; }
+
+.template-nonprofit .site-hero {
+  grid-template-columns: .85fr 1.15fr;
+  text-align: center;
+}
+.template-nonprofit .hero-content-block { order: 2; }
+.template-nonprofit .template-art-card { order: 1; border-radius: 50px 10px 50px 10px; }
+.template-nonprofit .service-grid { grid-template-columns: 1fr; }
+.template-nonprofit .service-card { grid-template-columns: 170px 1fr; }
+
+@media (max-width: 1100px) {
+  .customer-edit-layout { grid-template-columns: 1fr; }
+  .customer-edit-preview { position: static; max-height: none; }
+  .published-site .site-hero,
+  .template-local .site-hero,
+  .template-realestate .site-hero,
+  .template-nonprofit .site-hero {
+    grid-template-columns: 1fr;
+  }
+  .template-nonprofit .hero-content-block,
+  .template-nonprofit .template-art-card { order: initial; }
+}
+@media (max-width: 760px) {
+  .template-mini-grid { grid-template-columns: 1fr; }
+  .published-site .site-hero { padding: 42px 24px; }
+  .template-art-card { min-height: 220px; }
+  .service-grid,
+  .template-local .service-grid,
+  .template-realestate .service-grid,
+  .template-wellness .service-grid,
+  .template-portfolio .service-grid { grid-template-columns: 1fr; }
+}
+.template-realestate .site-hero:after { content: none !important; display: none !important; }
