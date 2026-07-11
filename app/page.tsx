@@ -10,6 +10,7 @@ export default function HomePage() {
           <div className="navlinks">
             <Link href="/builder">Create Site</Link>
             <Link href="/dashboard">Dashboard</Link>
+            <Link href="/customer">Customer Login</Link>
             <a href="#pricing">Subscriptions</a>
           </div>
         </nav>
@@ -20,7 +21,7 @@ export default function HomePage() {
             <p>Customers can create a website, go to subscription checkout, pay for the plan they selected, and receive a live link like <strong>customername.cookiesdigitalcreations.com</strong>. You can also build websites for customers yourself.</p>
             <div className="controls">
               <Link className="btn gold" href="/builder">Start Building</Link>
-              <Link className="btn secondary" href="/site/maryscleaning">View Demo Site</Link>
+              <Link className="btn secondary" href="/customer">Customer Login</Link>
             </div>
           </div>
           <div className="mock">

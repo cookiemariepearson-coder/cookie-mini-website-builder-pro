@@ -1,6 +1,6 @@
 {
   "name": "cookie-mini-website-builder-pro",
-  "version": "1.2.1",
+  "version": "1.3.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -21,6 +21,5 @@
   },
   "engines": {
     "node": "20.x"
-  },
-  "packageManager": "npm@10.8.2"
+  }
 }
