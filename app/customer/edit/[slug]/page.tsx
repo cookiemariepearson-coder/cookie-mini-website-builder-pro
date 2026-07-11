@@ -7,13 +7,14 @@ import {
   getBillingLabel,
   getExtraPageCount,
   getPlanPrice,
+  normalizePages,
+  pageOptions,
   plans,
   templates,
   type PlanKey,
   type TemplateKey
 } from '@/lib/templates';
-
-const pageOptions = ['Home', 'About', 'Services', 'Products', 'Gallery', 'Testimonials', 'Contact', 'FAQ'];
+import { CustomerSiteView } from '@/lib/site-view';
 
 function normalizeCheckoutUrl(rawUrl?: string) {
   if (!rawUrl) return '';
@@ -32,6 +33,12 @@ function normalizeCheckoutUrl(rawUrl?: string) {
 
 function normalizePlan(value: any): PlanKey {
   return value === 'business' || value === 'premium' ? value : 'starter';
+}
+
+function isTemplateDefaultText(value: string, field: 'headline' | 'description') {
+  const cleaned = String(value || '').trim();
+  if (!cleaned) return true;
+  return Object.values(templates).some(template => template[field] === cleaned);
 }
 
 export default function CustomerEditSitePage({ params }: { params: { slug: string } }) {
@@ -68,13 +75,14 @@ export default function CustomerEditSitePage({ params }: { params: { slug: strin
       setSite({
         ...loaded,
         businessName: loaded.businessName || loaded.business_name || '',
+        business_name: loaded.business_name || loaded.businessName || '',
         plan: normalizePlan(loaded.plan),
-        template: loaded.template || 'local',
-        pages: Array.isArray(loaded.pages) ? loaded.pages : ['Home']
+        template: templates[loaded.template as TemplateKey] ? loaded.template : 'local',
+        pages: normalizePages(loaded.pages)
       });
       localStorage.setItem('cookie-customer-email', customerEmail);
       localStorage.setItem('cookie-customer-slug', params.slug);
-      setMessage('Website loaded. Make changes, then save. The preview below updates as you edit.');
+      setMessage('Website loaded. Make changes, then click Save & Republish. The preview updates right away while you edit.');
     } catch (error: any) {
       setMessage(error.message || 'Could not load site.');
     }
@@ -84,16 +92,39 @@ export default function CustomerEditSitePage({ params }: { params: { slug: strin
     setSite((current: any) => ({ ...current, [field]: value }));
   }
 
+  function applyTemplate(nextTemplate: TemplateKey) {
+    const template = templates[nextTemplate];
+    setSite((current: any) => {
+      const currentHeadline = String(current?.headline || '');
+      const currentDescription = String(current?.description || '');
+      return {
+        ...current,
+        template: nextTemplate,
+        headline: isTemplateDefaultText(currentHeadline, 'headline') ? template.headline : currentHeadline,
+        description: isTemplateDefaultText(currentDescription, 'description') ? template.description : currentDescription
+      };
+    });
+    setMessage(`Template changed to ${template.name}. The preview has changed. Click Save & Republish to update the live website.`);
+  }
+
   function togglePage(page: string) {
     if (!site || page === 'Home') return;
-    const pages = Array.isArray(site.pages) ? site.pages : ['Home'];
-    if (pages.includes(page)) update('pages', pages.filter((p: string) => p !== page));
-    else update('pages', [...pages, page]);
+    setSite((current: any) => {
+      const currentPages = normalizePages(current.pages);
+      const withoutPage = currentPages.filter((item: string) => item !== page);
+      const nextPages = currentPages.includes(page) ? withoutPage : normalizePages([...currentPages, page]);
+      return { ...current, pages: nextPages };
+    });
+  }
+
+  function resetPages() {
+    setSite((current: any) => ({ ...current, pages: ['Home'] }));
+    setMessage('Pages reset to Home only. Click Save & Republish to update the live website.');
   }
 
   const planKey = useMemo<PlanKey>(() => normalizePlan(site?.plan), [site]);
   const planInfo = plans[planKey];
-  const selectedPages = Array.isArray(site?.pages) ? site.pages : ['Home'];
+  const selectedPages = normalizePages(site?.pages || ['Home']);
   const neededExtraPages = getExtraPageCount(planKey, selectedPages.length);
   const alreadyPaidExtraPages = Number(site?.extra_page_count || 0);
   const additionalExtraPagesNeeded = Math.max(0, neededExtraPages - alreadyPaidExtraPages);
@@ -123,43 +154,63 @@ export default function CustomerEditSitePage({ params }: { params: { slug: strin
     };
   }
 
+  function startExtraPageCheckout() {
+    if (!site) return;
+    const customerEmail = email.trim().toLowerCase();
+    if (!extraPageCheckoutUrl) {
+      setMessage('Extra page checkout link is missing. Add NEXT_PUBLIC_EXTRA_PAGE_SUBSCRIPTION_CHECKOUT_URL in Vercel, then redeploy.');
+      return;
+    }
+    const pendingSite = buildPendingSite();
+    localStorage.setItem('cookie-builder-pending-site', JSON.stringify(pendingSite));
+    localStorage.setItem('cookie-builder-last-draft', JSON.stringify(pendingSite));
+    localStorage.setItem('cookie-customer-email', customerEmail);
+    localStorage.setItem('cookie-customer-slug', params.slug);
+    window.location.href = extraPageCheckoutUrl;
+  }
+
   async function saveSite(options?: { skipExtraCheckout?: boolean }) {
     if (!site) return;
     const customerEmail = email.trim().toLowerCase();
 
+    if (!customerEmail) {
+      setMessage('Please enter the email used for this website before saving.');
+      return;
+    }
+
     if (!options?.skipExtraCheckout && additionalExtraPagesNeeded > 0) {
-      if (!extraPageCheckoutUrl) {
-        setMessage('Extra page checkout is not connected yet. Add NEXT_PUBLIC_EXTRA_PAGE_SUBSCRIPTION_CHECKOUT_URL in Vercel, then redeploy.');
-        return;
-      }
-      const pendingSite = buildPendingSite();
-      localStorage.setItem('cookie-builder-pending-site', JSON.stringify(pendingSite));
-      localStorage.setItem('cookie-builder-last-draft', JSON.stringify(pendingSite));
-      localStorage.setItem('cookie-customer-email', customerEmail);
-      setMessage(`You added ${additionalExtraPagesNeeded} extra page${additionalExtraPagesNeeded > 1 ? 's' : ''}. Opening the $10/month extra page checkout now. After payment, click the Gumroad return link to republish automatically.`);
-      window.location.href = extraPageCheckoutUrl;
+      setMessage(`You selected ${additionalExtraPagesNeeded} new extra page${additionalExtraPagesNeeded > 1 ? 's' : ''}. Sending you to the $10/month extra page checkout now.`);
+      startExtraPageCheckout();
       return;
     }
 
     setSaving(true);
-    setMessage('Saving your website updates...');
+    setMessage('Saving and republishing your website updates...');
     try {
-      const response = await fetch(`/api/customer/sites/${params.slug}`, {
+      const payload = {
+        ...site,
+        businessName: site.businessName || site.business_name || params.slug,
+        business_name: site.businessName || site.business_name || params.slug,
+        customerEmail,
+        template: site.template || 'local',
+        pages: selectedPages,
+        extra_page_count: Math.max(neededExtraPages, alreadyPaidExtraPages),
+        monthly_price: price,
+        price_label: priceLabel,
+        status: 'published'
+      };
+      const response = await fetch(`/api/customer/sites/${params.slug}?t=${Date.now()}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', 'x-customer-email': customerEmail },
-        body: JSON.stringify({
-          ...site,
-          customerEmail,
-          pages: selectedPages,
-          extra_page_count: Math.max(neededExtraPages, alreadyPaidExtraPages),
-          monthly_price: price,
-          price_label: priceLabel
-        })
+        body: JSON.stringify(payload)
       });
       const data = await response.json();
       if (!response.ok || !data.ok) throw new Error(data.error || 'Could not save site.');
-      setSite(data.site || site);
-      setMessage('Saved and republished. Open your website to review the update. If a browser tab was already open, refresh it to see the newest version.');
+      const savedSite = data.site || payload;
+      setSite({ ...savedSite, pages: normalizePages(savedSite.pages) });
+      localStorage.setItem('cookie-customer-email', customerEmail);
+      localStorage.setItem('cookie-customer-slug', params.slug);
+      setMessage('Saved and republished. Open or refresh the live website to see the newest wording, template, and pages.');
     } catch (error: any) {
       setMessage(error.message || 'Could not save site.');
     } finally {
@@ -180,7 +231,7 @@ export default function CustomerEditSitePage({ params }: { params: { slug: strin
     <section className="card">
       <span className="badge">Customer editor</span>
       <h1>Edit {site?.businessName || params.slug}</h1>
-      <p>Update the website details, colors, template, and pages. If extra pages are added beyond the subscription limit, the page add-on checkout opens automatically.</p>
+      <p>Update wording, colors, template, and pages. Extra pages go straight to checkout automatically — no need to contact Cookie Digital Creations unless something goes wrong.</p>
       <div className="admin-pin-row">
         <input value={email} onChange={e => setEmail(e.target.value)} placeholder="Email used for this website" type="email" />
         <button className="btn secondary" onClick={() => loadSite()} disabled={!email}>Load Site</button>
@@ -191,6 +242,7 @@ export default function CustomerEditSitePage({ params }: { params: { slug: strin
     {site && <div className="edit-grid">
       <section className="card">
         <h2>Content</h2>
+        <p className="small">These words update the live website after you click Save & Republish.</p>
         <div className="field"><label>Business Name</label><input value={site.businessName || ''} onChange={e => update('businessName', e.target.value)} /></div>
         <div className="field"><label>Headline</label><textarea value={site.headline || ''} onChange={e => update('headline', e.target.value)} /></div>
         <div className="field"><label>Description</label><textarea value={site.description || ''} onChange={e => update('description', e.target.value)} /></div>
@@ -200,7 +252,8 @@ export default function CustomerEditSitePage({ params }: { params: { slug: strin
 
       <section className="card">
         <h2>Design</h2>
-        <div className="field"><label>Template</label><select value={site.template || 'local'} onChange={e => update('template', e.target.value as TemplateKey)}>{Object.entries(templates).map(([key, item]) => <option value={key} key={key}>{item.name}</option>)}</select></div>
+        <p className="small">Each template has a different layout style, service wording, and visual treatment.</p>
+        <div className="field"><label>Template</label><select value={site.template || 'local'} onChange={e => applyTemplate(e.target.value as TemplateKey)}>{Object.entries(templates).map(([key, item]) => <option value={key} key={key}>{item.name} — {item.tone}</option>)}</select></div>
         <div className="field"><label>Main Color</label><input type="color" value={site.primaryColor || '#20172f'} onChange={e => update('primaryColor', e.target.value)} /></div>
         <div className="field"><label>Accent Color</label><input type="color" value={site.accentColor || '#c46a2d'} onChange={e => update('accentColor', e.target.value)} /></div>
         <div className="notice"><strong>Current plan:</strong> {planInfo.name}<br />{priceLabel}</div>
@@ -208,18 +261,23 @@ export default function CustomerEditSitePage({ params }: { params: { slug: strin
 
       <section className="card wide-card">
         <h2>Pages / Sections</h2>
-        <p>Home is required. Starter includes 1 page. Business includes up to 3 pages. Premium includes all available pages. Extra pages are $10/month per extra page.</p>
+        <p>Home is required. Starter includes 1 page. Business includes up to 3 pages. Premium includes all available pages. Extra pages are $10/month per page and checkout opens automatically.</p>
         <div className="pages-grid admin-pages">
           {pageOptions.map(page => {
             const selected = selectedPages.includes(page);
-            return <button key={page} onClick={() => togglePage(page)} className={`option ${selected ? 'active' : ''}`}><strong>{page}</strong><br /><span className="small">{page === 'Home' ? 'Required' : selected ? 'Selected' : 'Add page'}</span></button>;
+            return <button key={page} onClick={() => togglePage(page)} className={`option ${selected ? 'active' : ''}`} disabled={page === 'Home'}>
+              <strong>{page}</strong><br />
+              <span className="small">{page === 'Home' ? 'Required' : selected ? 'Selected — click to remove' : 'Add page'}</span>
+            </button>;
           })}
         </div>
         {additionalExtraPagesNeeded > 0 && <div className="notice danger" style={{marginTop: 18}}>
-          <strong>Extra page checkout required:</strong> You added {additionalExtraPagesNeeded} extra page{additionalExtraPagesNeeded > 1 ? 's' : ''} beyond the current subscription. Click below and the $10/month extra page checkout will open automatically.
+          <strong>Extra page checkout required:</strong> You added {additionalExtraPagesNeeded} new extra page{additionalExtraPagesNeeded > 1 ? 's' : ''}. Click the gold button below or save, and the $10/month extra page checkout opens automatically.
         </div>}
         <div className="controls">
           <button className="btn gold" onClick={() => saveSite()} disabled={saving}>{saving ? 'Saving...' : additionalExtraPagesNeeded > 0 ? 'Checkout Extra Pages & Republish' : 'Save & Republish'}</button>
+          {extraPageCheckoutUrl && <button className="btn secondary" onClick={startExtraPageCheckout}>Add Extra Page — $10/mo</button>}
+          <button className="btn secondary" onClick={resetPages}>Reset Pages</button>
           <a className="btn secondary" href={direct} target="_blank" rel="noreferrer">Open Direct Link</a>
           <a className="btn secondary" href={subdomain} target="_blank" rel="noreferrer">Open Subdomain</a>
           <Link className="btn secondary" href="/customer">Back to Dashboard</Link>
@@ -228,33 +286,9 @@ export default function CustomerEditSitePage({ params }: { params: { slug: strin
 
       <section className="card wide-card">
         <h2>Live Preview</h2>
-        <p className="small">This preview changes immediately while editing. After saving, refresh the live website link if you already had it open.</p>
-        <CustomerPreview site={site} pages={selectedPages} />
+        <p className="small">This preview changes immediately. After saving, refresh the published website tab to see the newest live version.</p>
+        <CustomerSiteView site={{...site, pages: selectedPages}} previewLabel="Live Editing Preview" />
       </section>
     </div>}
   </main>;
-}
-
-function CustomerPreview({ site, pages }: { site: any; pages: string[] }) {
-  const template = templates[(site.template || 'local') as TemplateKey] || templates.local;
-  return <div className="site-preview" style={{marginTop: 18, textAlign: 'left'}}>
-    <header className="site-header" style={{background: site.primaryColor || '#20172f', color: 'white'}}>
-      <strong>{site.businessName || 'My Business Name'}</strong>
-      <span className="small" style={{color:'rgba(255,255,255,.82)'}}>{pages.join(' • ')}</span>
-    </header>
-    <section className="site-hero" style={{background: `linear-gradient(135deg, ${site.primaryColor || '#20172f'}, ${site.accentColor || '#c46a2d'})`, color: 'white'}}>
-      <span className="badge" style={{color: site.primaryColor || '#20172f'}}>Preview</span>
-      <h1>{site.headline || template.headline}</h1>
-      <p style={{color:'rgba(255,255,255,.88)'}}>{site.description || template.description}</p>
-      <button className="btn gold">Contact Now</button>
-    </section>
-    <section className="site-section">
-      <h2>What We Offer</h2>
-      <div className="service-grid">
-        {template.services.map((s: any) => <div className="service-card" key={s.title}><h3>{s.title}</h3><p>{s.text}</p></div>)}
-      </div>
-    </section>
-    {pages.filter((p: string) => p !== 'Home').map((p: string) => <section className="site-section" key={p}><h2>{p}</h2><p>This page is ready to be customized with images, text, products, testimonials, booking details, forms, or customer-specific content.</p></section>)}
-    <footer className="site-footer"><strong>{site.businessName || 'My Business Name'}</strong><br />{site.phone || 'Add phone'} • {site.email || 'Add email'}</footer>
-  </div>;
 }

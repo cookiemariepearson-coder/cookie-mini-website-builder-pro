@@ -1,9 +1,8 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { plans, templates, slugify, getPlanPrice, getBillingLabel, getExtraPageCount, EXTRA_PAGE_PRICE, type PlanKey, type TemplateKey } from '@/lib/templates';
-
-const pageOptions = ['Home', 'About', 'Services', 'Products', 'Gallery', 'Testimonials', 'Contact', 'FAQ'];
+import { plans, templates, slugify, getPlanPrice, getBillingLabel, getExtraPageCount, EXTRA_PAGE_PRICE, normalizePages, pageOptions, type PlanKey, type TemplateKey } from '@/lib/templates';
+import { CustomerSiteView } from '@/lib/site-view';
 
 export default function BuilderPage() {
   const [step, setStep] = useState(0);
@@ -39,18 +38,16 @@ export default function BuilderPage() {
     // Keep the customer's selected pages when switching plans. Starter and Business
     // may include extra pages at $10/month per page; Premium includes all available pages.
     setSelectedPages(currentPages => {
-      const orderedPages = pageOptions.filter(page => currentPages.includes(page));
-      return orderedPages.includes('Home') ? orderedPages : ['Home', ...orderedPages];
+      return normalizePages(currentPages);
     });
   }
 
   function togglePage(page: string) {
     if (page === 'Home') return;
-    if (selectedPages.includes(page)) {
-      setSelectedPages(selectedPages.filter(p => p !== page));
-    } else {
-      setSelectedPages([...selectedPages, page]);
-    }
+    setSelectedPages(currentPages => {
+      const normalized = normalizePages(currentPages);
+      return normalized.includes(page) ? normalizePages(normalized.filter(p => p !== page)) : normalizePages([...normalized, page]);
+    });
   }
 
   function continueToCheckout() {
@@ -71,7 +68,7 @@ export default function BuilderPage() {
       email,
       primaryColor,
       accentColor,
-      pages: selectedPages,
+      pages: normalizePages(selectedPages),
       billing: 'subscription',
       extraPageCount,
       price: currentPrice,
@@ -162,32 +159,8 @@ export default function BuilderPage() {
         </div>
       </aside>
       <section className="preview-pane">
-        <SitePreview businessName={cleanBusinessName} headline={headline} description={description} primaryColor={primaryColor} accentColor={accentColor} template={template} pages={selectedPages} phone={phone} email={email} />
+        <CustomerSiteView businessName={cleanBusinessName} headline={headline} description={description} primaryColor={primaryColor} accentColor={accentColor} template={template} pages={selectedPages} phone={phone} email={email} previewLabel="Website Preview" />
       </section>
     </main>
   );
-}
-
-function SitePreview(props: any) {
-  const services = templates[props.template as TemplateKey].services;
-  return <div className="site-preview">
-    <header className="site-header" style={{background: props.primaryColor, color: 'white'}}>
-      <strong>{props.businessName}</strong>
-      <span className="small" style={{color:'rgba(255,255,255,.82)'}}>{props.pages.join(' • ')}</span>
-    </header>
-    <section className="site-hero" style={{background: `linear-gradient(135deg, ${props.primaryColor}, ${props.accentColor})`, color: 'white'}}>
-      <span className="badge" style={{color: props.primaryColor}}>Website Preview</span>
-      <h1>{props.headline}</h1>
-      <p style={{color:'rgba(255,255,255,.88)'}}>{props.description}</p>
-      <button className="btn gold">Contact Now</button>
-    </section>
-    <section className="site-section">
-      <h2>Services</h2>
-      <div className="service-grid">
-        {services.map((s: any) => <div className="service-card" key={s.title}><h3>{s.title}</h3><p>{s.text}</p></div>)}
-      </div>
-    </section>
-    {props.pages.filter((p: string) => p !== 'Home').map((p: string) => <section className="site-section" key={p}><h2>{p}</h2><p>This page is included in the selected subscription or added as an extra-page upgrade and can be customized for the customer.</p></section>)}
-    <footer className="site-footer"><strong>{props.businessName}</strong><br/>{props.phone || 'Add phone'} • {props.email || 'Add email'}</footer>
-  </div>;
 }

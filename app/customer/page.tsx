@@ -18,6 +18,19 @@ function money(value: any) {
   return `$${Number(value || 0).toLocaleString()}/mo`;
 }
 
+function normalizeCheckoutUrl(rawUrl?: string) {
+  if (!rawUrl) return '';
+  let url = rawUrl.trim();
+  if (!/^https?:\/\//i.test(url)) url = `https://${url}`;
+  try {
+    const parsed = new URL(url);
+    if (parsed.hostname.includes('gumroad.com') && !parsed.searchParams.has('wanted')) parsed.searchParams.set('wanted', 'true');
+    return parsed.toString();
+  } catch {
+    return '';
+  }
+}
+
 export default function CustomerDashboardPage() {
   const [email, setEmail] = useState('');
   const [slug, setSlug] = useState('');
@@ -25,6 +38,7 @@ export default function CustomerDashboardPage() {
   const [message, setMessage] = useState('Enter the email and website name used during setup.');
   const [loading, setLoading] = useState(false);
   const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'cookiesdigitalcreations.com';
+  const extraPageCheckoutUrl = normalizeCheckoutUrl(process.env.NEXT_PUBLIC_EXTRA_PAGE_SUBSCRIPTION_CHECKOUT_URL);
 
   useEffect(() => {
     const savedEmail = localStorage.getItem('cookie-customer-email') || '';
@@ -54,7 +68,7 @@ export default function CustomerDashboardPage() {
       setSlug(clean);
       localStorage.setItem('cookie-customer-email', customerEmail);
       localStorage.setItem('cookie-customer-slug', clean);
-      setMessage('Website loaded. You can open it, edit it, or contact Cookie Digital Creations for plan changes.');
+      setMessage('Website loaded. You can open it, edit it, republish it, or add extra pages through checkout.');
     } catch (error: any) {
       setSite(null);
       setMessage(error.message || 'Could not load your website.');
@@ -126,7 +140,8 @@ export default function CustomerDashboardPage() {
 
       <div className="card" style={{boxShadow: 'none', marginTop: 18}}>
         <h3>Need more pages?</h3>
-        <p>Extra pages are $10/month per page. Use the extra page add-on checkout link from your subscription setup, then contact Cookie Digital Creations to unlock or add the extra page.</p>
+        <p>Extra pages are $10/month per page. Customers can add pages automatically through checkout — no need to contact Cookie Digital Creations unless something goes wrong.</p>
+        {extraPageCheckoutUrl ? <a className="btn gold" href={extraPageCheckoutUrl}>Add Extra Page — $10/mo</a> : <div className="notice danger">Extra page checkout link is not connected yet. Add NEXT_PUBLIC_EXTRA_PAGE_SUBSCRIPTION_CHECKOUT_URL in Vercel.</div>}
       </div>
     </section>}
   </main>;

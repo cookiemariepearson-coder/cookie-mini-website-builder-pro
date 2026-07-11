@@ -62,7 +62,7 @@ textarea { min-height: 88px; resize: vertical; }
 .site-footer { padding:26px 38px; background:#15111f; color:white; }
 .notice { border:1px dashed rgba(196,106,45,.6); border-radius:18px; padding:14px; background:#fff8ef; color:#6d3a16; font-weight:800; }
 @media (max-width: 900px) { .hero, .cards3, .builder-shell { grid-template-columns:1fr; } .sidebar { position:static; height:auto; } .service-grid { grid-template-columns:1fr; } .navlinks { display:none; } }
-.checkout-layout { display:grid; grid-template-columns: 1.15fr .85fr; gap:22px; align-items:start; }
+.checkout-layout { display:grid; grid-template-columns: 1.15fr .85fr; gap:22px; align-items:flex-start; }
 .checkout-card { position: sticky; top: 24px; }
 .checkout-summary { display:grid; gap:6px; padding:14px; border:1px solid var(--line); border-radius:18px; background:#fff; margin: 12px 0 14px; }
 .checkout-summary span { font-size: 30px; font-weight: 950; letter-spacing:-.04em; color:var(--accent); }
@@ -79,7 +79,7 @@ textarea { min-height: 88px; resize: vertical; }
 .mini-stat { display:grid; gap:6px; padding:20px; box-shadow:none; }
 .mini-stat span { color:var(--muted); font-weight:800; }
 .mini-stat strong { font-size:32px; letter-spacing:-.05em; }
-.admin-table-head { display:flex; justify-content:space-between; gap:18px; align-items:start; margin-bottom:14px; }
+.admin-table-head { display:flex; justify-content:space-between; gap:18px; align-items:flex-start; margin-bottom:14px; }
 .admin-table-head input { max-width: 360px; }
 .admin-table { display:grid; gap:12px; }
 .admin-row { display:grid; grid-template-columns: 1fr auto; gap:14px; align-items:center; border:1px solid var(--line); border-radius:22px; padding:16px; background:#fff; }
@@ -91,7 +91,65 @@ textarea { min-height: 88px; resize: vertical; }
 @media (max-width: 900px) { .admin-pin-row, .admin-stats, .admin-row, .edit-grid { grid-template-columns:1fr; } .admin-table-head { flex-direction:column; } .admin-actions { justify-content:flex-start; } .admin-pages { grid-template-columns:1fr 1fr; } }
 .customer-login-grid { grid-template-columns: 1fr 1fr; margin-top: 14px; }
 .customer-site-card { margin-top: 22px; }
-.customer-status-pill { align-self:start; border:1px solid var(--line); border-radius:999px; padding:8px 12px; background:#fff8ef; color:var(--accent); font-weight:950; text-transform:capitalize; }
+.customer-status-pill { align-self:flex-start; border:1px solid var(--line); border-radius:999px; padding:8px 12px; background:#fff8ef; color:var(--accent); font-weight:950; text-transform:capitalize; }
 .customer-stats { grid-template-columns: repeat(4, minmax(0,1fr)); }
 .wide-card { grid-column: 1 / -1; }
 @media (max-width: 900px) { .customer-login-grid, .customer-stats { grid-template-columns:1fr; } }
+
+/* Template + published site upgrades */
+.published-site-page { padding: 24px; }
+.site-brand-link { color: inherit; text-decoration: none; }
+.site-top-links { display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:flex-end; }
+.site-top-links a { color: rgba(255,255,255,.92); font-size:13px; font-weight:900; padding:8px 10px; border-radius:999px; border:1px solid rgba(255,255,255,.22); background:rgba(255,255,255,.08); }
+.site-top-links a:hover { background:rgba(255,255,255,.2); }
+.hero-kicker, .section-eyebrow { text-transform:uppercase; letter-spacing:.16em; font-size:12px; font-weight:950; opacity:.85; margin-bottom:10px; }
+.hero-actions { display:flex; gap:10px; flex-wrap:wrap; margin-top:18px; }
+.hero-phone { background:rgba(255,255,255,.92)!important; color:var(--ink)!important; }
+.contact-panel { display:grid; gap:8px; margin-top:16px; padding:18px; border:1px solid var(--line); border-radius:22px; background:#fff; }
+.extra-content-section p { max-width: 780px; }
+.option:disabled { cursor:not-allowed; opacity:.82; }
+
+.template-local .site-hero { border-bottom: 8px solid rgba(255,255,255,.2); }
+.template-local .service-card { border-radius: 16px; background:#fff; }
+
+.template-restaurant { border-radius: 42px; }
+.template-restaurant .site-header { text-transform:uppercase; letter-spacing:.08em; }
+.template-restaurant .site-hero { text-align:center; padding:70px 44px; }
+.template-restaurant .service-card { background:#fff7ef; border:2px solid rgba(196,106,45,.22); transform: rotate(-.5deg); }
+.template-restaurant .service-card:nth-child(2) { transform: rotate(.8deg); }
+.template-restaurant .site-section { background:linear-gradient(180deg,#fff,#fff8ef); }
+
+.template-realestate { border-radius: 12px; }
+.template-realestate .site-header { border-bottom: 5px solid rgba(255,255,255,.3); }
+.template-realestate .site-hero { display:grid; grid-template-columns: 1.2fr .8fr; gap:24px; align-items:center; }
+.template-realestate .site-hero:after { content:'Investment • Property • Trust'; display:grid; place-items:center; min-height:190px; border-radius:18px; background:rgba(255,255,255,.14); border:1px solid rgba(255,255,255,.25); font-weight:950; text-align:center; padding:18px; }
+.template-realestate .service-card { border-left:6px solid var(--accent); border-radius:10px; }
+
+.template-wellness { border-radius: 34px; background:#fbfff9; }
+.template-wellness .site-header { border-radius:0 0 28px 28px; }
+.template-wellness .site-hero { border-radius:0 0 60px 60px; }
+.template-wellness .service-card { border-radius:34px; background:#f7fff4; }
+.template-wellness .site-section { background:#fbfff9; }
+
+.template-portfolio { background:#0f0c18; color:white; }
+.template-portfolio p, .template-portfolio .small { color:rgba(255,255,255,.72); }
+.template-portfolio .site-header { background:#0f0c18!important; border-bottom:1px solid rgba(255,255,255,.18); }
+.template-portfolio .site-hero { min-height:430px; display:flex; flex-direction:column; justify-content:flex-end; }
+.template-portfolio .site-section { background:#171225; border-color:rgba(255,255,255,.12); }
+.template-portfolio .service-card { background:#231a36; border-color:rgba(255,255,255,.14); }
+.template-portfolio .site-footer { background:#050408; }
+
+.template-nonprofit { border-radius: 28px; }
+.template-nonprofit .site-header { justify-content:center; flex-direction:column; gap:12px; text-align:center; }
+.template-nonprofit .site-hero { text-align:center; }
+.template-nonprofit .service-grid { grid-template-columns: 1fr; }
+.template-nonprofit .service-card { display:grid; grid-template-columns: 220px 1fr; gap:18px; align-items:center; background:#fff; }
+.template-nonprofit .service-card h3 { margin:0; }
+
+@media (max-width: 900px) {
+  .site-header { align-items:flex-start; gap:12px; }
+  .site-top-links { justify-content:flex-start; }
+  .template-realestate .site-hero { display:block; }
+  .template-realestate .site-hero:after { margin-top:18px; }
+  .template-nonprofit .service-card { grid-template-columns:1fr; }
+}

@@ -1,22 +1,11 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
-import { getBillingLabel, getExtraPageCount, getPlanPrice, type PlanKey } from '@/lib/templates';
+import { getBillingLabel, getExtraPageCount, getPlanPrice, normalizePages, type PlanKey } from '@/lib/templates';
 
 export const dynamic = 'force-dynamic';
 
 function normalizeEmail(value: string | null) {
   return String(value || '').trim().toLowerCase();
-}
-
-function normalizePages(value: any) {
-  if (Array.isArray(value)) return value.length ? value : ['Home'];
-  if (typeof value === 'string') {
-    try {
-      const parsed = JSON.parse(value);
-      if (Array.isArray(parsed)) return parsed.length ? parsed : ['Home'];
-    } catch {}
-  }
-  return ['Home'];
 }
 
 function normalizePlan(value: any): PlanKey {
@@ -76,6 +65,7 @@ function allowedCustomerUpdateFields(payload: any) {
     update.price_label = payload.price_label || getBillingLabel(plan, pages.length);
   }
 
+  update.status = 'published';
   update.updated_at = new Date().toISOString();
   return update;
 }

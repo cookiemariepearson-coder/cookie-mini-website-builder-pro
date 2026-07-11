@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
+import { normalizePages } from '@/lib/templates';
 
 function cleanRootDomain(value?: string | null) {
   const fallback = 'cookiesdigitalcreations.com';
@@ -41,7 +42,7 @@ export async function POST(request: Request) {
     email: payload.email,
     primaryColor: payload.primaryColor,
     accentColor: payload.accentColor,
-    pages: payload.pages,
+    pages: normalizePages(payload.pages),
     billing: payload.billing || 'subscription',
     extra_page_count: payload.extraPageCount || 0,
     monthly_price: payload.price || null,

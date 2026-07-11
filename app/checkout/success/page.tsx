@@ -2,7 +2,8 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { templates, type TemplateKey } from '@/lib/templates';
+import { type TemplateKey } from '@/lib/templates';
+import { CustomerSiteView } from '@/lib/site-view';
 
 type PaidSite = {
   slug: string;
@@ -91,7 +92,7 @@ export default function CheckoutSuccessPage() {
         This app is still in demo publish mode because Supabase is not connected yet. The success page can show the website preview, but new public customer subdomains need Supabase connected to save and open for everyone.
       </div>}
 
-      {site && <MiniPreview site={site} />}
+      {site && <CustomerSiteView site={site} previewLabel="Published Website Preview" />}
 
       <div className="controls">
         {directPath && <a className="btn gold" href={directPath} target="_blank" rel="noreferrer">Open Published Website</a>}
@@ -101,28 +102,4 @@ export default function CheckoutSuccessPage() {
       </div>
     </div>
   </main>;
-}
-
-function MiniPreview({ site }: { site: PaidSite }) {
-  const services = templates[site.template]?.services || templates.local.services;
-  const pages = site.pages || ['Home'];
-  return <div className="site-preview" style={{marginTop: 24, textAlign: 'left'}}>
-    <header className="site-header" style={{background: site.primaryColor || '#20172f', color: 'white'}}>
-      <strong>{site.businessName}</strong>
-      <span className="small" style={{color:'rgba(255,255,255,.82)'}}>{pages.join(' • ')}</span>
-    </header>
-    <section className="site-hero" style={{background: `linear-gradient(135deg, ${site.primaryColor || '#20172f'}, ${site.accentColor || '#c46a2d'})`, color: 'white'}}>
-      <span className="badge" style={{color: site.primaryColor || '#20172f'}}>Published Website Preview</span>
-      <h1>{site.headline}</h1>
-      <p style={{color:'rgba(255,255,255,.88)'}}>{site.description}</p>
-      <button className="btn gold">Contact Now</button>
-    </section>
-    <section className="site-section">
-      <h2>Services</h2>
-      <div className="service-grid">
-        {services.map((s: any) => <div className="service-card" key={s.title}><h3>{s.title}</h3><p>{s.text}</p></div>)}
-      </div>
-    </section>
-    <footer className="site-footer"><strong>{site.businessName}</strong><br />{site.phone || 'Add phone'} • {site.email || 'Add email'}</footer>
-  </div>;
 }

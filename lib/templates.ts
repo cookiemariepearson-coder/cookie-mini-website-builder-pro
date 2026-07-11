@@ -56,9 +56,12 @@ export function getBaseBillingLabel(plan: PlanKey) {
   return `$${plans[plan].monthlyPrice}/month subscription`;
 }
 
+export const pageOptions = ['Home', 'About', 'Services', 'Products', 'Gallery', 'Testimonials', 'Contact', 'FAQ'];
+
 export const templates = {
   local: {
     name: 'Local Business',
+    tone: 'Clean local service layout',
     headline: 'Professional services made simple for your local community.',
     description: 'A clean website for service providers who need a trustworthy online presence, clear service details, and easy contact options.',
     services: [
@@ -69,6 +72,7 @@ export const templates = {
   },
   restaurant: {
     name: 'Restaurant / Cookbook',
+    tone: 'Bold food brand layout',
     headline: 'Flavor, personality, and easy online ordering all in one place.',
     description: 'A bold food website for cooks, restaurants, digital recipe products, meal makers, and kitchen brands.',
     services: [
@@ -79,6 +83,7 @@ export const templates = {
   },
   realestate: {
     name: 'Real Estate / Investor',
+    tone: 'Trust-building investor layout',
     headline: 'Make your property, investment, or real estate brand look official.',
     description: 'A professional layout for real estate groups, investor education products, property pages, and local services.',
     services: [
@@ -89,6 +94,7 @@ export const templates = {
   },
   wellness: {
     name: 'Wellness Product',
+    tone: 'Soft wellness product layout',
     headline: 'A calm, trusted website for wellness guides, trackers, and digital products.',
     description: 'A warm layout for wellness journals, education products, trackers, reminders, and lifestyle brands.',
     services: [
@@ -99,6 +105,7 @@ export const templates = {
   },
   portfolio: {
     name: 'Film / Portfolio',
+    tone: 'Visual creator showcase layout',
     headline: 'Showcase your work, your story, and your creative brand.',
     description: 'A visual portfolio website for filmmakers, creators, artists, writers, performers, and production companies.',
     services: [
@@ -109,6 +116,7 @@ export const templates = {
   },
   nonprofit: {
     name: 'Nonprofit / Community',
+    tone: 'Community mission layout',
     headline: 'A welcoming website for your mission, programs, and community impact.',
     description: 'A clean mission-based site for shelters, youth programs, community projects, outreach, and donation pages.',
     services: [
@@ -120,6 +128,81 @@ export const templates = {
 };
 
 export type TemplateKey = keyof typeof templates;
+
+export const templateThemeClasses: Record<TemplateKey, string> = {
+  local: 'template-local',
+  restaurant: 'template-restaurant',
+  realestate: 'template-realestate',
+  wellness: 'template-wellness',
+  portfolio: 'template-portfolio',
+  nonprofit: 'template-nonprofit'
+};
+
+export const templateAccentWords: Record<TemplateKey, string> = {
+  local: 'Local Service Website',
+  restaurant: 'Food Brand Website',
+  realestate: 'Real Estate Website',
+  wellness: 'Wellness Product Website',
+  portfolio: 'Creative Portfolio Website',
+  nonprofit: 'Mission & Community Website'
+};
+
+export const pageCopy: Record<string, { title: string; body: string }> = {
+  About: {
+    title: 'About Us',
+    body: 'Share the story behind the business, who it serves, and why customers can trust the brand.'
+  },
+  Services: {
+    title: 'Services',
+    body: 'Break down the main services, what each service includes, and how customers can get started.'
+  },
+  Products: {
+    title: 'Products',
+    body: 'Showcase digital products, physical products, packages, downloads, bundles, or featured offers.'
+  },
+  Gallery: {
+    title: 'Gallery',
+    body: 'Display photos, examples, portfolio samples, before-and-after images, or visual proof of the work.'
+  },
+  Testimonials: {
+    title: 'Testimonials',
+    body: 'Highlight customer reviews, success stories, feedback, or social proof that builds trust.'
+  },
+  Contact: {
+    title: 'Contact',
+    body: 'Make it easy for visitors to reach the business by email, phone, booking link, or contact form.'
+  },
+  FAQ: {
+    title: 'Frequently Asked Questions',
+    body: 'Answer common questions about services, pricing, turnaround time, delivery, booking, or support.'
+  }
+};
+
+export function normalizePages(value: any) {
+  let pages: string[] = [];
+  if (Array.isArray(value)) pages = value;
+  else if (typeof value === 'string') {
+    try {
+      const parsed = JSON.parse(value);
+      if (Array.isArray(parsed)) pages = parsed;
+    } catch {
+      pages = value.split(',');
+    }
+  }
+
+  const cleaned = pages
+    .map(page => String(page || '').trim())
+    .filter(Boolean)
+    .filter((page, index, array) => array.indexOf(page) === index)
+    .filter(page => pageOptions.includes(page));
+
+  const withoutHome = cleaned.filter(page => page !== 'Home');
+  return ['Home', ...withoutHome];
+}
+
+export function sectionId(page: string) {
+  return String(page || 'home').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'home';
+}
 
 export function slugify(value: string) {
   return value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '').slice(0, 50) || 'customer-site';

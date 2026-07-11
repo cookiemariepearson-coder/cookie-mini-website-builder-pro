@@ -1,37 +1,25 @@
-# Cookie Mini Website Builder Pro — Customer Edit + Extra Page Checkout Fix
+# Cookie Mini Website Builder Pro — Customer Edit + Template + Page Fix
 
-This update fixes the customer dashboard edit flow.
+Upload the inside files/folders of this package to GitHub, commit changes, and let Vercel redeploy.
 
-## What changed
+This update fixes:
+- Customer edit form saves and republishes content wording.
+- Template changes are visibly different on preview and public sites.
+- Published website top navigation links are clickable anchor links.
+- Page add/remove is normalized so Home stays required and duplicate/broken page arrays are avoided.
+- Extra pages are handled automatically through the $10/month extra page checkout link.
+- Removed wording that says customers need to contact Cookie Digital Creations just to unlock extra pages.
 
-- Customer edits now save and republish to Supabase.
-- Published customer websites are forced dynamic/no-cache so saved edits show after refresh.
-- Changing templates now updates the live preview and saved published site.
-- Customer edit page now includes a live preview.
-- Extra pages are handled automatically from the customer editor.
-- If Starter or Business customers add pages beyond their plan limit, the $10/month extra page add-on checkout opens directly.
-- Premium customers can still select all pages without extra page checkout.
+Required Vercel environment variables:
+- NEXT_PUBLIC_EXTRA_PAGE_SUBSCRIPTION_CHECKOUT_URL
+- NEXT_PUBLIC_ROOT_DOMAIN
+- Supabase variables already added earlier
+- Gumroad checkout variables already added earlier
 
-## Required Vercel Environment Variable
-
-Make sure this exists in Vercel:
-
-NEXT_PUBLIC_EXTRA_PAGE_SUBSCRIPTION_CHECKOUT_URL
-
-Value: your Gumroad $10/month extra page add-on checkout link. It should start with https://
-
-## Gumroad return link
-
-Keep the same Gumroad return/content link for all subscriptions and the extra page add-on:
-
-https://www.cookiesdigitalcreations.com/checkout/success?paid=1
-
-## Upload steps
-
-1. Unzip this package.
-2. Upload the inside files/folders to GitHub.
-3. Commit changes.
-4. Let Vercel redeploy.
-5. Test https://www.cookiesdigitalcreations.com/customer
-
-Do not change IONOS, Supabase, or Vercel domain settings for this update.
+After deploy, test:
+1. /customer
+2. Edit Website Details
+3. Change headline/description and click Save & Republish
+4. Change template and click Save & Republish
+5. Add/remove pages and click Save & Republish
+6. Open the subdomain and refresh the page
