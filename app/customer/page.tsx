@@ -140,8 +140,11 @@ export default function CustomerDashboardPage() {
 
       <div className="card" style={{boxShadow: 'none', marginTop: 18}}>
         <h3>Need more pages?</h3>
-        <p>Extra pages are $10/month per page. Customers can add pages automatically through checkout — no need to contact Cookie Digital Creations unless something goes wrong.</p>
-        {extraPageCheckoutUrl ? <a className="btn gold" href={extraPageCheckoutUrl}>Add Extra Page — $10/mo</a> : <div className="notice danger">Extra page checkout link is not connected yet. Add NEXT_PUBLIC_EXTRA_PAGE_SUBSCRIPTION_CHECKOUT_URL in Vercel.</div>}
+        <p>Extra pages are $10/month per page. Use the add-on checkout button below to add pages automatically. Any issues, click the Contact Us button for help.</p>
+        <div className="controls" style={{marginTop: 12}}>
+          {extraPageCheckoutUrl ? <a className="btn gold" href={extraPageCheckoutUrl}>Add Extra Page — $10/mo</a> : <div className="notice danger">Extra page checkout link is not connected yet. Add NEXT_PUBLIC_EXTRA_PAGE_SUBSCRIPTION_CHECKOUT_URL in Vercel.</div>}
+          <a className="btn secondary" href="mailto:cookiepearson69@gmail.com?subject=Cookie%20Mini%20Website%20Builder%20Support">Contact Us</a>
+        </div>
       </div>
     </section>}
   </main>;

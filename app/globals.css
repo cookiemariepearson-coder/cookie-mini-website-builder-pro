@@ -382,3 +382,186 @@ textarea { min-height: 88px; resize: vertical; }
   .template-portfolio .service-grid { grid-template-columns: 1fr; }
 }
 .template-realestate .site-hero:after { content: none !important; display: none !important; }
+
+
+/* Cookie 3D Template Visual Refresh */
+.site-preview.published-site {
+  box-shadow: 0 38px 110px rgba(32,23,47,.18), inset 0 1px 0 rgba(255,255,255,.5);
+  transform-style: preserve-3d;
+  isolation: isolate;
+}
+.published-site .site-hero {
+  perspective: 1100px;
+  background-image:
+    radial-gradient(circle at 18% 14%, rgba(255,255,255,.28), transparent 24%),
+    radial-gradient(circle at 86% 72%, rgba(255,255,255,.16), transparent 28%),
+    linear-gradient(135deg, var(--hero-primary, transparent), var(--hero-accent, transparent));
+}
+.art-scene {
+  transform: rotateY(-10deg) rotateX(5deg);
+  box-shadow:
+    0 45px 90px rgba(0,0,0,.28),
+    inset 0 1px 0 rgba(255,255,255,.35),
+    inset 0 -30px 60px rgba(0,0,0,.08);
+}
+.art-stack-3d {
+  width: min(250px, 86%);
+  height: 182px;
+  position: relative;
+  transform-style: preserve-3d;
+  margin-bottom: 18px;
+}
+.art-layer {
+  position: absolute;
+  inset: 0;
+  border-radius: 30px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255,255,255,.32);
+  box-shadow: 0 22px 52px rgba(0,0,0,.22);
+}
+.art-layer-back {
+  transform: translate3d(-26px,-18px,-40px) rotateZ(-8deg);
+  background: rgba(255,255,255,.16);
+}
+.art-layer-back span { font-size: 42px; filter: grayscale(.15); opacity: .75; }
+.art-layer-mid {
+  transform: translate3d(8px,8px,0) rotateZ(3deg);
+  background: rgba(255,255,255,.24);
+  align-content: center;
+  gap: 13px;
+  padding: 30px;
+}
+.art-layer-mid i {
+  display: block;
+  width: 82%;
+  height: 18px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.72);
+  box-shadow: inset 0 -4px 12px rgba(0,0,0,.1);
+}
+.art-layer-mid i:nth-child(2) { width: 62%; }
+.art-layer-mid i:nth-child(3) { width: 42%; }
+.art-layer-front {
+  transform: translate3d(28px,28px,38px) rotateZ(8deg);
+  background: rgba(255,255,255,.88);
+  color: #111827;
+}
+.art-layer-front b { font-size: 72px; filter: drop-shadow(0 14px 18px rgba(0,0,0,.18)); }
+.art-orbit {
+  position: absolute;
+  border-radius: 999px;
+  pointer-events: none;
+  border: 1px solid rgba(255,255,255,.34);
+  box-shadow: inset 0 0 30px rgba(255,255,255,.18);
+}
+.orbit-one { width: 190px; height: 190px; left: -55px; top: 28px; }
+.orbit-two { width: 120px; height: 120px; right: -28px; bottom: 70px; }
+.art-chip-row { display: flex; gap: 9px; margin-top: 10px; }
+.art-chip-row em {
+  width: 42px;
+  height: 14px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.62);
+  box-shadow: 0 8px 20px rgba(0,0,0,.16);
+}
+.template-art-icon, .template-art-lines { display: none !important; }
+
+/* Stronger template-specific artwork + shapes */
+.template-local .site-hero {
+  background-image:
+    linear-gradient(120deg, rgba(255,255,255,.13) 0 15%, transparent 15% 30%, rgba(255,255,255,.08) 30% 45%, transparent 45%),
+    radial-gradient(circle at 82% 18%, rgba(245,158,11,.34), transparent 24%),
+    linear-gradient(135deg, #1f3153, #f59e0b) !important;
+}
+.template-local .art-scene { border-radius: 26px; }
+.template-local .art-layer-front { background: linear-gradient(145deg,#fff,#fff7dc); }
+
+.template-restaurant .site-hero {
+  background-image:
+    radial-gradient(circle at 84% 20%, rgba(249,115,22,.38), transparent 24%),
+    radial-gradient(circle at 14% 84%, rgba(255,255,255,.22), transparent 22%),
+    repeating-linear-gradient(-12deg, rgba(255,255,255,.08) 0 12px, transparent 12px 28px),
+    linear-gradient(135deg, #7f1d1d, #f97316) !important;
+}
+.template-restaurant .art-scene { border-radius: 999px 999px 46px 46px; transform: rotateY(8deg) rotateX(6deg) rotateZ(1deg); }
+.template-restaurant .art-layer-front { border-radius: 999px; background: linear-gradient(145deg,#fff8ed,#ffffff); }
+.template-restaurant .service-card:before { content:'✦'; color:var(--accent); font-size:26px; }
+
+.template-realestate .site-hero {
+  background-image:
+    linear-gradient(90deg, rgba(212,175,55,.34), transparent 38%),
+    linear-gradient(135deg, #12312b, #d4af37) !important;
+}
+.template-realestate .art-scene { border-radius: 18px; transform: rotateY(-13deg) rotateX(4deg); }
+.template-realestate .art-layer, .template-realestate .art-layer-front { border-radius: 12px; }
+.template-realestate .art-layer-front { background: linear-gradient(145deg,#fff8dc,#fff); }
+
+.template-wellness .site-hero {
+  background-image:
+    radial-gradient(circle at 18% 22%, rgba(132,204,22,.36), transparent 22%),
+    radial-gradient(circle at 86% 70%, rgba(255,255,255,.24), transparent 25%),
+    linear-gradient(135deg, #31572c, #84cc16) !important;
+}
+.template-wellness .art-scene { border-radius: 52px; transform: rotateY(-6deg) rotateX(8deg); }
+.template-wellness .art-layer-front { border-radius: 50%; background: linear-gradient(145deg,#f2ffe8,#ffffff); }
+
+.template-portfolio .site-hero {
+  background-image:
+    radial-gradient(circle at 70% 18%, rgba(168,85,247,.48), transparent 23%),
+    repeating-linear-gradient(90deg, rgba(255,255,255,.08) 0 18px, transparent 18px 32px),
+    linear-gradient(135deg, #050408, #a855f7) !important;
+}
+.template-portfolio .art-scene { border-radius: 24px; transform: rotateY(-16deg) rotateX(8deg); }
+.template-portfolio .art-layer-front { background: linear-gradient(145deg,#ffffff,#f1e7ff); }
+.template-portfolio .art-layer-mid i { height: 26px; border-radius: 8px; }
+
+.template-nonprofit .site-hero {
+  background-image:
+    radial-gradient(circle at 12% 18%, rgba(34,197,94,.34), transparent 22%),
+    radial-gradient(circle at 92% 78%, rgba(255,255,255,.2), transparent 26%),
+    linear-gradient(135deg, #155e75, #22c55e) !important;
+}
+.template-nonprofit .art-scene { border-radius: 54px 14px 54px 14px; transform: rotateY(10deg) rotateX(5deg); }
+.template-nonprofit .art-layer-front { background: linear-gradient(145deg,#ecfff4,#ffffff); }
+
+/* Better template chooser previews */
+.template-mini {
+  min-height: 82px;
+  background:
+    radial-gradient(circle at 88% 16%, rgba(196,106,45,.13), transparent 24%),
+    linear-gradient(135deg,#ffffff,#fffaf3);
+  box-shadow: 0 14px 34px rgba(32,23,47,.08);
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+}
+.template-mini:hover { transform: translateY(-3px) rotateX(2deg); box-shadow: 0 24px 46px rgba(32,23,47,.14); }
+.template-mini span { transform: rotate(-5deg); border: 2px solid rgba(255,255,255,.5); }
+.template-mini strong:after {
+  content: '3D style';
+  display: block;
+  width: fit-content;
+  margin-top: 5px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: #fff1dd;
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 950;
+}
+
+/* Editing box comfort */
+.customer-edit-controls textarea,
+.customer-edit-controls input,
+.customer-edit-controls select {
+  scroll-margin-top: 100px;
+}
+.customer-edit-controls textarea {
+  resize: vertical;
+  overflow: auto;
+}
+.customer-edit-preview .site-preview { margin-top: 0 !important; }
+@media (max-width: 760px) {
+  .art-scene { transform: none !important; }
+  .art-stack-3d { height: 150px; }
+  .art-layer-front b { font-size: 54px; }
+}

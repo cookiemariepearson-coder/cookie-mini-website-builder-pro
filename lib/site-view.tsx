@@ -64,12 +64,18 @@ export function CustomerSiteView(props: SiteViewProps) {
           <a className="btn gold" href={contactHref}>Contact Now</a>
         </div>
       </div>
-      <div className="template-art-card" aria-label={`${template.name} artwork`}>
+      <div className={`template-art-card art-scene art-${templateKey}`} aria-label={`${template.name} artwork`}>
         <div className="template-art-glow" />
-        <div className="template-art-icon">{template.art.icon}</div>
+        <div className="art-orbit orbit-one" />
+        <div className="art-orbit orbit-two" />
+        <div className="art-stack-3d">
+          <div className="art-layer art-layer-back"><span>{template.art.icon}</span></div>
+          <div className="art-layer art-layer-mid"><i /> <i /> <i /></div>
+          <div className="art-layer art-layer-front"><b>{template.art.icon}</b></div>
+        </div>
         <strong>{template.art.label}</strong>
         <span>{template.art.details}</span>
-        <div className="template-art-lines"><i /><i /><i /></div>
+        <div className="art-chip-row"><em /> <em /> <em /></div>
       </div>
     </section>
 
