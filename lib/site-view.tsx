@@ -1,13 +1,15 @@
 import {
+  defaultOfferTitle,
+  normalizePageContent,
+  normalizePages,
+  normalizePlanKey,
+  normalizeServiceCards,
   pageCopy,
   sectionId,
   templateAccentWords,
   templateThemeClasses,
   templates,
-  type TemplateKey,
-  normalizePages,
-  normalizePlanKey,
-  plans
+  type TemplateKey
 } from './templates';
 
 type SiteViewProps = {
@@ -23,6 +25,9 @@ type SiteViewProps = {
   email?: string;
   previewLabel?: string;
   plan?: string;
+  serviceCards?: any[];
+  pageContent?: any;
+  offerTitle?: string;
 };
 
 function safeTemplate(value: any): TemplateKey {
@@ -50,8 +55,22 @@ export function CustomerSiteView(props: SiteViewProps) {
   const themeClass = templateThemeClasses[templateKey];
   const contactHref = email ? `mailto:${email}` : '#contact';
   const navPages = pages.includes('Contact') ? pages : [...pages, 'Contact'];
+  const serviceCards = normalizeServiceCards(props.serviceCards ?? source.serviceCards ?? source.service_cards, templateKey);
+  const pageContent = normalizePageContent(props.pageContent ?? source.pageContent ?? source.page_content, pages);
+  const servicePageContent = pageContent.Services || pageCopy.Services;
+  const serviceSectionTitle = valueOrDefault(props.offerTitle ?? source.offerTitle ?? source.offer_title, servicePageContent?.title || defaultOfferTitle);
+  const serviceSectionBody = valueOrDefault(servicePageContent?.body, '');
 
-  return <div className={`site-preview published-site ${themeClass} ${isFree ? 'free-site-preview' : ''}`} style={{marginTop: 18, textAlign: 'left'} as any}>
+  const cssVars = {
+    marginTop: 18,
+    textAlign: 'left',
+    '--primary': primaryColor,
+    '--accent': accentColor,
+    '--hero-primary': primaryColor,
+    '--hero-accent': accentColor
+  } as any;
+
+  return <div className={`site-preview published-site ${themeClass} ${isFree ? 'free-site-preview' : ''}`} style={cssVars}>
     <header className="site-header" style={{background: primaryColor, color: 'white'}}>
       <a href="#home" className="site-brand-link"><strong>{businessName}</strong></a>
       <nav className="site-top-links" aria-label="Website navigation">
@@ -62,32 +81,39 @@ export function CustomerSiteView(props: SiteViewProps) {
     <section id="home" className="site-hero" style={{background: `linear-gradient(135deg, ${primaryColor}, ${accentColor})`, color: 'white'}}>
       <div className="hero-content-block">
         <div className="hero-kicker">{props.previewLabel || templateAccentWords[templateKey]}</div>
-        <span className="badge" style={{color: primaryColor}}>{isFree ? 'Free Launch Page' : template.name}</span>
+        <span className="badge" style={{color: primaryColor}}>{template.name}</span>
         <h1>{headline}</h1>
         <p className="hero-description" style={{color:'rgba(255,255,255,.92)'}}>{description}</p>
         <div className="hero-actions">
           <a className="btn gold" href={contactHref}>Contact Now</a>
         </div>
       </div>
-      <div className="template-art-card" aria-label={`${template.name} artwork`}>
+      <div className="template-art-card art-scene" aria-label={`${template.name} artwork`}>
         <div className="template-art-glow" />
-        <div className="template-art-icon">{template.art.icon}</div>
+        <div className="art-stack-3d">
+          <div className="art-layer art-layer-back"><span>{template.art.icon}</span></div>
+          <div className="art-layer art-layer-mid"><i /><i /><i /></div>
+          <div className="art-layer art-layer-front"><b>{template.art.icon}</b></div>
+        </div>
         <strong>{template.art.label}</strong>
         <span>{template.art.details}</span>
-        <div className="template-art-lines"><i /><i /><i /></div>
+        <div className="art-orbit orbit-one" />
+        <div className="art-orbit orbit-two" />
+        <div className="art-chip-row"><em /><em /><em /></div>
       </div>
     </section>
 
     <section id="services" className="site-section services-section">
-      <div className="section-eyebrow">{template.tone}</div>
-      <h2>What We Offer</h2>
+      <div className="section-eyebrow">Services</div>
+      <h2>{serviceSectionTitle || defaultOfferTitle}</h2>
+      {serviceSectionBody && <p className="section-intro">{serviceSectionBody}</p>}
       <div className="service-grid">
-        {template.services.map((s: any) => <div className="service-card" key={s.title}><h3>{s.title}</h3><p>{s.text}</p></div>)}
+        {serviceCards.map((s: any, index: number) => <div className="service-card" key={`${s.title}-${index}`}><h3>{s.title}</h3><p>{s.text}</p></div>)}
       </div>
     </section>
 
     {pages.filter(page => page !== 'Home' && page !== 'Services').map(page => {
-      const copy = pageCopy[page] || { title: page, body: 'This page can be customized with customer-specific content.' };
+      const copy = pageContent[page] || pageCopy[page] || { title: page, body: 'This page can be customized with customer-specific content.' };
       return <section className="site-section extra-content-section" id={sectionId(page)} key={page}>
         <div className="section-eyebrow">{page}</div>
         <h2>{copy.title}</h2>

@@ -99,12 +99,12 @@ export const pageOptions = ['Home', 'About', 'Services', 'Products', 'Gallery', 
 export const templates = {
   local: {
     name: 'Local Business',
-    tone: '3D local service layout',
+    tone: 'Local service website',
     defaultPrimary: '#1f3153',
     defaultAccent: '#f59e0b',
     headline: 'Professional services made simple for your local community.',
     description: 'A clean website for service providers who need a trustworthy online presence, clear service details, and easy contact options.',
-    art: { icon: '🏪', label: '3D Local Service Desk', details: 'Booking cards • Map pin • Trust badges' },
+    art: { icon: '🏪', label: 'Local Service Desk', details: 'Booking cards • Map pin • Trust badges' },
     services: [
       { title: 'Landing Page', text: 'A focused homepage that introduces the business, explains what it offers, and moves visitors toward booking or contacting.' },
       { title: 'Service Highlights', text: 'Clear service cards that explain what the customer does, who it helps, and why people should choose them.' },
@@ -113,12 +113,12 @@ export const templates = {
   },
   restaurant: {
     name: 'Restaurant / Cookbook',
-    tone: '3D food brand layout',
+    tone: 'Food brand website',
     defaultPrimary: '#7f1d1d',
     defaultAccent: '#f97316',
     headline: 'Flavor, personality, and easy online ordering all in one place.',
     description: 'A bold food website for cooks, restaurants, digital recipe products, meal makers, and kitchen brands.',
-    art: { icon: '🍽️', label: '3D Signature Food Board', details: 'Menu cards • Recipe stack • Order button' },
+    art: { icon: '🍽️', label: 'Signature Food Board', details: 'Menu cards • Recipe stack • Order button' },
     services: [
       { title: 'Featured Menu', text: 'Showcase meals, recipes, bundles, signature dishes, or digital food products in a polished layout.' },
       { title: 'Recipe Product Page', text: 'Explain what buyers receive, show the value, and guide visitors to purchase or download.' },
@@ -127,12 +127,12 @@ export const templates = {
   },
   realestate: {
     name: 'Real Estate / Investor',
-    tone: '3D investor trust layout',
+    tone: 'Investor trust website',
     defaultPrimary: '#12312b',
     defaultAccent: '#d4af37',
     headline: 'Make your property, investment, or real estate brand look official.',
     description: 'A professional layout for real estate groups, investor education products, property pages, and local services.',
-    art: { icon: '🏘️', label: '3D Property Trust Panel', details: 'Listings • Investor cards • Lead form' },
+    art: { icon: '🏘️', label: 'Property Trust Panel', details: 'Listings • Investor cards • Lead form' },
     services: [
       { title: 'Investment Landing Page', text: 'Explain your real estate brand, investor education offer, or property service in simple, trustworthy language.' },
       { title: 'Resource Sections', text: 'Add beginner guides, product offers, market education, or REIT education without needing a full blog first.' },
@@ -141,12 +141,12 @@ export const templates = {
   },
   wellness: {
     name: 'Wellness Product',
-    tone: '3D wellness product layout',
+    tone: 'Wellness product website',
     defaultPrimary: '#31572c',
     defaultAccent: '#84cc16',
     headline: 'A calm, trusted website for wellness guides, trackers, and digital products.',
     description: 'A warm layout for wellness journals, education products, trackers, reminders, and lifestyle brands.',
-    art: { icon: '🌿', label: '3D Wellness Journey Card', details: 'Guides • Trackers • Calm product stack' },
+    art: { icon: '🌿', label: 'Wellness Journey Card', details: 'Guides • Trackers • Calm product stack' },
     services: [
       { title: 'Product Landing Page', text: 'Explain the wellness product, who it helps, what is included, and why it is useful.' },
       { title: 'Benefits Section', text: 'Highlight healthy habits, reminders, education, recipes, trackers, or guided steps in simple language.' },
@@ -155,12 +155,12 @@ export const templates = {
   },
   portfolio: {
     name: 'Film / Portfolio',
-    tone: '3D creator showcase layout',
+    tone: 'Creator showcase website',
     defaultPrimary: '#111827',
     defaultAccent: '#a855f7',
     headline: 'Showcase your work, your story, and your creative brand.',
     description: 'A visual portfolio website for filmmakers, creators, artists, writers, performers, and production companies.',
-    art: { icon: '🎬', label: '3D Creator Spotlight Wall', details: 'Projects • Reels • Booking cards' },
+    art: { icon: '🎬', label: 'Creator Spotlight Wall', details: 'Projects • Reels • Booking cards' },
     services: [
       { title: 'Portfolio Homepage', text: 'Introduce the creator or company with a strong headline, style, and featured work section.' },
       { title: 'Project Pages', text: 'Add pages for films, scripts, shows, books, services, or creative products when using Business or Premium.' },
@@ -169,12 +169,12 @@ export const templates = {
   },
   nonprofit: {
     name: 'Nonprofit / Community',
-    tone: '3D community mission layout',
+    tone: 'Community mission website',
     defaultPrimary: '#155e75',
     defaultAccent: '#22c55e',
     headline: 'A welcoming website for your mission, programs, and community impact.',
     description: 'A clean mission-based site for shelters, youth programs, community projects, outreach, and donation pages.',
-    art: { icon: '🤝', label: '3D Community Impact Board', details: 'Mission • Programs • Support cards' },
+    art: { icon: '🤝', label: 'Community Impact Board', details: 'Mission • Programs • Support cards' },
     services: [
       { title: 'Mission Page', text: 'Tell visitors what the organization stands for and why the mission matters.' },
       { title: 'Programs Section', text: 'Explain services, community programs, volunteer needs, or outreach activities.' },
@@ -240,4 +240,53 @@ export function sectionId(page: string) {
 
 export function slugify(value: string) {
   return value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '').slice(0, 50) || 'customer-site';
+}
+
+
+export type ServiceCard = { title: string; text: string };
+export type PageContentMap = Record<string, { title: string; body: string }>;
+
+export const defaultOfferTitle = 'Services & Offers';
+
+export function normalizeServiceCards(value: any, templateKey: TemplateKey | string = 'local'): ServiceCard[] {
+  let cards: any[] | null = null;
+  if (Array.isArray(value)) cards = value;
+  else if (typeof value === 'string' && value.trim()) {
+    try {
+      const parsed = JSON.parse(value);
+      if (Array.isArray(parsed)) cards = parsed;
+    } catch {}
+  }
+
+  const safeTemplateKey = templates[templateKey as TemplateKey] ? templateKey as TemplateKey : 'local';
+  const fallback = templates[safeTemplateKey].services;
+  const cleaned = (cards || fallback).slice(0, 6).map((card: any, index: number) => ({
+    title: String(card?.title || fallback[index % fallback.length]?.title || `Offer ${index + 1}`).trim(),
+    text: String(card?.text || card?.body || fallback[index % fallback.length]?.text || 'Describe this offer, service, product, or customer benefit.').trim()
+  })).filter(card => card.title || card.text);
+
+  return cleaned.length ? cleaned : fallback.map(card => ({ ...card }));
+}
+
+export function normalizePageContent(value: any, pages: string[] = pageOptions): PageContentMap {
+  let parsed: Record<string, any> = {};
+  if (value && typeof value === 'object' && !Array.isArray(value)) parsed = value;
+  else if (typeof value === 'string' && value.trim()) {
+    try {
+      const maybe = JSON.parse(value);
+      if (maybe && typeof maybe === 'object' && !Array.isArray(maybe)) parsed = maybe;
+    } catch {}
+  }
+
+  const result: PageContentMap = {};
+  const pageList = normalizePages(pages).filter(page => page !== 'Home');
+  for (const page of pageList) {
+    const fallback = pageCopy[page] || { title: page, body: 'Add custom information for this page.' };
+    const item = parsed[page] || {};
+    result[page] = {
+      title: String(item.title || fallback.title || page),
+      body: String(item.body || fallback.body || '')
+    };
+  }
+  return result;
 }

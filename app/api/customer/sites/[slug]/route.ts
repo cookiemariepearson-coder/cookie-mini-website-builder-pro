@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
-import { getBillingLabel, getExtraPageCount, getPlanPrice, normalizePages, normalizePlanKey, type PlanKey } from '@/lib/templates';
+import { defaultOfferTitle, getBillingLabel, getExtraPageCount, getPlanPrice, normalizePageContent, normalizePages, normalizePlanKey, normalizeServiceCards, type PlanKey } from '@/lib/templates';
 
 export const dynamic = 'force-dynamic';
 
@@ -28,6 +28,12 @@ function publicSiteFields(site: any) {
     primaryColor: site.primaryColor || '#20172f',
     accentColor: site.accentColor || '#c46a2d',
     pages,
+    offerTitle: site.offerTitle || site.offer_title || defaultOfferTitle,
+    offer_title: site.offer_title || site.offerTitle || defaultOfferTitle,
+    serviceCards: normalizeServiceCards(site.serviceCards || site.service_cards, site.template || 'local'),
+    service_cards: normalizeServiceCards(site.serviceCards || site.service_cards, site.template || 'local'),
+    pageContent: normalizePageContent(site.pageContent || site.page_content, pages),
+    page_content: normalizePageContent(site.pageContent || site.page_content, pages),
     extra_page_count,
     monthly_price: plan === 'free' ? 0 : site.monthly_price || getPlanPrice(plan, pages.length),
     price_label: plan === 'free' ? 'Free' : site.price_label || getBillingLabel(plan, pages.length),
@@ -38,11 +44,14 @@ function publicSiteFields(site: any) {
 
 function allowedCustomerUpdateFields(payload: any) {
   const update: Record<string, any> = {};
-  const fields = ['businessName', 'business_name', 'headline', 'description', 'phone', 'email', 'primaryColor', 'accentColor', 'pages', 'template', 'extra_page_count', 'monthly_price', 'price_label'];
+  const fields = ['businessName', 'business_name', 'headline', 'description', 'phone', 'email', 'primaryColor', 'accentColor', 'pages', 'template', 'extra_page_count', 'monthly_price', 'price_label', 'offer_title', 'service_cards', 'page_content'];
 
   for (const field of fields) if (field in payload) update[field] = payload[field];
   if ('businessName' in payload) update.business_name = payload.businessName;
   if ('business_name' in payload) update.businessName = payload.business_name;
+  if ('offerTitle' in payload) update.offer_title = payload.offerTitle;
+  if ('serviceCards' in payload) update.service_cards = normalizeServiceCards(payload.serviceCards, payload.template || 'local');
+  if ('pageContent' in payload) update.page_content = normalizePageContent(payload.pageContent, payload.pages || []);
 
   const plan = normalizePlanKey(payload.currentPlan || payload.plan);
   const pages = plan === 'free' ? ['Home'] : normalizePages(payload.pages);

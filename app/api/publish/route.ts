@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
-import { getBillingLabel, getPlanPrice, normalizePages, normalizePlanKey } from '@/lib/templates';
+import { defaultOfferTitle, getBillingLabel, getPlanPrice, normalizePageContent, normalizePages, normalizePlanKey, normalizeServiceCards } from '@/lib/templates';
 
 function cleanRootDomain(value?: string | null) {
   const fallback = 'cookiesdigitalcreations.com';
@@ -43,6 +43,9 @@ export async function POST(request: Request) {
     primaryColor: payload.primaryColor,
     accentColor: payload.accentColor,
     pages,
+    offer_title: payload.offerTitle || payload.offer_title || defaultOfferTitle,
+    service_cards: normalizeServiceCards(payload.serviceCards || payload.service_cards, payload.template || 'local'),
+    page_content: normalizePageContent(payload.pageContent || payload.page_content, pages),
     billing: plan === 'free' ? 'free' : 'subscription',
     extra_page_count: plan === 'free' ? 0 : payload.extraPageCount || 0,
     monthly_price: calculatedPrice,

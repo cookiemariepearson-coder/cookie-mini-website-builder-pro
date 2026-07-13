@@ -472,7 +472,7 @@ textarea { min-height: 88px; resize: vertical; }
   background-image:
     linear-gradient(120deg, rgba(255,255,255,.13) 0 15%, transparent 15% 30%, rgba(255,255,255,.08) 30% 45%, transparent 45%),
     radial-gradient(circle at 82% 18%, rgba(245,158,11,.34), transparent 24%),
-    linear-gradient(135deg, #1f3153, #f59e0b) !important;
+    linear-gradient(135deg, var(--hero-primary), var(--hero-accent)) !important;
 }
 .template-local .art-scene { border-radius: 26px; }
 .template-local .art-layer-front { background: linear-gradient(145deg,#fff,#fff7dc); }
@@ -482,7 +482,7 @@ textarea { min-height: 88px; resize: vertical; }
     radial-gradient(circle at 84% 20%, rgba(249,115,22,.38), transparent 24%),
     radial-gradient(circle at 14% 84%, rgba(255,255,255,.22), transparent 22%),
     repeating-linear-gradient(-12deg, rgba(255,255,255,.08) 0 12px, transparent 12px 28px),
-    linear-gradient(135deg, #7f1d1d, #f97316) !important;
+    linear-gradient(135deg, var(--hero-primary), var(--hero-accent)) !important;
 }
 .template-restaurant .art-scene { border-radius: 999px 999px 46px 46px; transform: rotateY(8deg) rotateX(6deg) rotateZ(1deg); }
 .template-restaurant .art-layer-front { border-radius: 999px; background: linear-gradient(145deg,#fff8ed,#ffffff); }
@@ -491,7 +491,7 @@ textarea { min-height: 88px; resize: vertical; }
 .template-realestate .site-hero {
   background-image:
     linear-gradient(90deg, rgba(212,175,55,.34), transparent 38%),
-    linear-gradient(135deg, #12312b, #d4af37) !important;
+    linear-gradient(135deg, var(--hero-primary), var(--hero-accent)) !important;
 }
 .template-realestate .art-scene { border-radius: 18px; transform: rotateY(-13deg) rotateX(4deg); }
 .template-realestate .art-layer, .template-realestate .art-layer-front { border-radius: 12px; }
@@ -501,7 +501,7 @@ textarea { min-height: 88px; resize: vertical; }
   background-image:
     radial-gradient(circle at 18% 22%, rgba(132,204,22,.36), transparent 22%),
     radial-gradient(circle at 86% 70%, rgba(255,255,255,.24), transparent 25%),
-    linear-gradient(135deg, #31572c, #84cc16) !important;
+    linear-gradient(135deg, var(--hero-primary), var(--hero-accent)) !important;
 }
 .template-wellness .art-scene { border-radius: 52px; transform: rotateY(-6deg) rotateX(8deg); }
 .template-wellness .art-layer-front { border-radius: 50%; background: linear-gradient(145deg,#f2ffe8,#ffffff); }
@@ -510,7 +510,7 @@ textarea { min-height: 88px; resize: vertical; }
   background-image:
     radial-gradient(circle at 70% 18%, rgba(168,85,247,.48), transparent 23%),
     repeating-linear-gradient(90deg, rgba(255,255,255,.08) 0 18px, transparent 18px 32px),
-    linear-gradient(135deg, #050408, #a855f7) !important;
+    linear-gradient(135deg, var(--hero-primary), var(--hero-accent)) !important;
 }
 .template-portfolio .art-scene { border-radius: 24px; transform: rotateY(-16deg) rotateX(8deg); }
 .template-portfolio .art-layer-front { background: linear-gradient(145deg,#ffffff,#f1e7ff); }
@@ -520,7 +520,7 @@ textarea { min-height: 88px; resize: vertical; }
   background-image:
     radial-gradient(circle at 12% 18%, rgba(34,197,94,.34), transparent 22%),
     radial-gradient(circle at 92% 78%, rgba(255,255,255,.2), transparent 26%),
-    linear-gradient(135deg, #155e75, #22c55e) !important;
+    linear-gradient(135deg, var(--hero-primary), var(--hero-accent)) !important;
 }
 .template-nonprofit .art-scene { border-radius: 54px 14px 54px 14px; transform: rotateY(10deg) rotateX(5deg); }
 .template-nonprofit .art-layer-front { background: linear-gradient(145deg,#ecfff4,#ffffff); }
@@ -537,7 +537,7 @@ textarea { min-height: 88px; resize: vertical; }
 .template-mini:hover { transform: translateY(-3px) rotateX(2deg); box-shadow: 0 24px 46px rgba(32,23,47,.14); }
 .template-mini span { transform: rotate(-5deg); border: 2px solid rgba(255,255,255,.5); }
 .template-mini strong:after {
-  content: '3D style';
+  content: 'visual style';
   display: block;
   width: fit-content;
   margin-top: 5px;
@@ -651,20 +651,60 @@ textarea { min-height: 88px; resize: vertical; }
   color: rgba(255,255,255,.88);
   font-size: .82rem;
 }
-.free-site-preview .site-header:after {
-  content: 'Free Launch Page';
-  margin-left: auto;
-  padding: 6px 10px;
-  border-radius: 999px;
-  background: rgba(255,255,255,.12);
-  color: rgba(255,255,255,.92);
-  font-weight: 900;
-  font-size: .78rem;
-}
 @media (max-width: 1100px) {
   .cards4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .featured-plan { transform: none; }
 }
 @media (max-width: 720px) {
   .cards4 { grid-template-columns: 1fr; }
+}
+
+
+/* Customer content editing and customer-controlled colors */
+.section-intro {
+  max-width: 780px;
+  color: var(--muted);
+  line-height: 1.75;
+  margin: -4px 0 20px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.editable-card-group {
+  display: grid;
+  gap: 12px;
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+.editable-card-group h3,
+.editable-card-group h4 {
+  margin: 0;
+}
+.mini-edit-card {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: linear-gradient(180deg,#fff,#fffaf4);
+}
+.page-content-editor {
+  margin-top: 18px;
+}
+.customer-edit-controls .mini-edit-card textarea {
+  min-height: 150px;
+}
+.customer-edit-controls .tall-textarea {
+  min-height: 240px;
+}
+.published-site {
+  --accent: #c46a2d;
+  --primary: #20172f;
+}
+.published-site .service-card {
+  border-color: color-mix(in srgb, var(--accent) 35%, var(--line));
+}
+.published-site .service-card h3,
+.published-site .section-eyebrow {
+  color: var(--accent);
 }

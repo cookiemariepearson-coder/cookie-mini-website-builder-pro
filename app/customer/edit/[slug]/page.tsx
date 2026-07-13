@@ -7,6 +7,9 @@ import {
   getExtraPageCount,
   getPlanPrice,
   normalizePages,
+  normalizePageContent,
+  normalizeServiceCards,
+  defaultOfferTitle,
   pageOptions,
   plans,
   templates,
@@ -90,7 +93,13 @@ export default function CustomerEditSitePage({ params }: { params: { slug: strin
         template: templateKey,
         primaryColor: loaded.primaryColor || templates[templateKey as TemplateKey].defaultPrimary,
         accentColor: loaded.accentColor || templates[templateKey as TemplateKey].defaultAccent,
-        pages: normalizePages(loaded.pages)
+        pages: normalizePages(loaded.pages),
+        serviceCards: normalizeServiceCards(loaded.serviceCards || loaded.service_cards, templateKey),
+        service_cards: normalizeServiceCards(loaded.serviceCards || loaded.service_cards, templateKey),
+        pageContent: normalizePageContent(loaded.pageContent || loaded.page_content, normalizePages(loaded.pages)),
+        page_content: normalizePageContent(loaded.pageContent || loaded.page_content, normalizePages(loaded.pages)),
+        offerTitle: loaded.offerTitle || loaded.offer_title || defaultOfferTitle,
+        offer_title: loaded.offer_title || loaded.offerTitle || defaultOfferTitle
       });
       localStorage.setItem('cookie-customer-email', customerEmail);
       localStorage.setItem('cookie-customer-slug', params.slug);
@@ -106,7 +115,31 @@ export default function CustomerEditSitePage({ params }: { params: { slug: strin
       const next = { ...current, [field]: value };
       if (field === 'businessName') next.business_name = value;
       if (field === 'business_name') next.businessName = value;
+      if (field === 'offerTitle') next.offer_title = value;
+      if (field === 'offer_title') next.offerTitle = value;
       return next;
+    });
+  }
+
+
+  function updateServiceCard(index: number, field: 'title' | 'text', value: string) {
+    setSite((current: any) => {
+      if (!current) return current;
+      const templateKey = templates[current.template as TemplateKey] ? current.template as TemplateKey : 'local';
+      const cards = normalizeServiceCards(current.serviceCards || current.service_cards, templateKey);
+      const nextCards = cards.map((card, cardIndex) => cardIndex === index ? { ...card, [field]: value } : card);
+      return { ...current, serviceCards: nextCards, service_cards: nextCards };
+    });
+  }
+
+  function updatePageContent(page: string, field: 'title' | 'body', value: string) {
+    setSite((current: any) => {
+      if (!current) return current;
+      const currentPages = normalizePages(current.pages);
+      const content = normalizePageContent(current.pageContent || current.page_content, currentPages);
+      const fallback = content[page] || { title: page, body: '' };
+      const nextContent = { ...content, [page]: { ...fallback, [field]: value } };
+      return { ...current, pageContent: nextContent, page_content: nextContent };
     });
   }
 
@@ -160,6 +193,9 @@ export default function CustomerEditSitePage({ params }: { params: { slug: strin
       extraPageCount: Math.max(pendingNeededExtraPages, alreadyPaidExtraPages + Math.max(0, pendingNeededExtraPages - alreadyPaidExtraPages)),
       price: pendingPrice,
       priceLabel: pendingPriceLabel,
+      offerTitle: site?.offerTitle || site?.offer_title || defaultOfferTitle,
+      serviceCards: normalizeServiceCards(site?.serviceCards || site?.service_cards, site?.template || 'local'),
+      pageContent: normalizePageContent(site?.pageContent || site?.page_content, pagesToSave),
       paymentStartedAt: new Date().toISOString()
     };
   }
@@ -242,6 +278,12 @@ export default function CustomerEditSitePage({ params }: { params: { slug: strin
         extra_page_count: planKey === 'free' ? 0 : Math.max(neededExtraPages, alreadyPaidExtraPages),
         monthly_price: planKey === 'free' ? 0 : price,
         price_label: planKey === 'free' ? 'Free' : priceLabel,
+        offerTitle: site.offerTitle || site.offer_title || defaultOfferTitle,
+        offer_title: site.offerTitle || site.offer_title || defaultOfferTitle,
+        serviceCards: normalizeServiceCards(site.serviceCards || site.service_cards, site.template || 'local'),
+        service_cards: normalizeServiceCards(site.serviceCards || site.service_cards, site.template || 'local'),
+        pageContent: normalizePageContent(site.pageContent || site.page_content, selectedPages),
+        page_content: normalizePageContent(site.pageContent || site.page_content, selectedPages),
         status: 'published'
       };
       const response = await fetch(`/api/customer/sites/${params.slug}?t=${Date.now()}`, {
@@ -256,7 +298,13 @@ export default function CustomerEditSitePage({ params }: { params: { slug: strin
         ...savedSite,
         businessName: savedSite.businessName || savedSite.business_name || payload.businessName,
         business_name: savedSite.business_name || savedSite.businessName || payload.businessName,
-        pages: normalizePages(savedSite.pages)
+        pages: normalizePages(savedSite.pages),
+        serviceCards: normalizeServiceCards(savedSite.serviceCards || savedSite.service_cards, savedSite.template || payload.template || 'local'),
+        service_cards: normalizeServiceCards(savedSite.serviceCards || savedSite.service_cards, savedSite.template || payload.template || 'local'),
+        pageContent: normalizePageContent(savedSite.pageContent || savedSite.page_content, normalizePages(savedSite.pages)),
+        page_content: normalizePageContent(savedSite.pageContent || savedSite.page_content, normalizePages(savedSite.pages)),
+        offerTitle: savedSite.offerTitle || savedSite.offer_title || payload.offerTitle || defaultOfferTitle,
+        offer_title: savedSite.offer_title || savedSite.offerTitle || payload.offerTitle || defaultOfferTitle
       });
       localStorage.setItem('cookie-customer-email', customerEmail);
       localStorage.setItem('cookie-customer-slug', params.slug);
@@ -297,6 +345,15 @@ export default function CustomerEditSitePage({ params }: { params: { slug: strin
           <div className="field"><label>Business Name</label><input value={site.businessName || ''} onChange={e => update('businessName', e.target.value)} /></div>
           <div className="field"><label>Headline</label><textarea className="large-textarea" value={site.headline ?? ''} onChange={e => update('headline', e.target.value)} placeholder="Write the main headline here" /></div>
           <div className="field"><label>Description / Main Website Message</label><textarea className="large-textarea tall-textarea" value={site.description ?? ''} onChange={e => update('description', e.target.value)} placeholder="Write a full business description here. Longer text is okay." /></div>
+          <div className="field"><label>Services Section Title</label><input value={site.offerTitle || site.offer_title || defaultOfferTitle} onChange={e => update('offerTitle', e.target.value)} placeholder="Example: Services & Offers" /></div>
+          <div className="editable-card-group">
+            <h3>Service / Offer Boxes</h3>
+            <p className="small">Edit the 3 feature boxes customers see on the website. Add what the business actually offers.</p>
+            {normalizeServiceCards(site.serviceCards || site.service_cards, site.template || 'local').map((card, index) => <div className="mini-edit-card" key={index}>
+              <div className="field"><label>Box {index + 1} Title</label><input value={card.title} onChange={e => updateServiceCard(index, 'title', e.target.value)} /></div>
+              <div className="field"><label>Box {index + 1} Details</label><textarea className="large-textarea" value={card.text} onChange={e => updateServiceCard(index, 'text', e.target.value)} /></div>
+            </div>)}
+          </div>
           <div className="field"><label>Phone</label><input value={site.phone || ''} onChange={e => update('phone', e.target.value)} placeholder="Optional. This will show in the contact section, not the top hero." /></div>
           <div className="field"><label>Email</label><input value={site.email || ''} onChange={e => update('email', e.target.value)} placeholder="This opens when visitors click Contact Now." /></div>
         </section>
@@ -334,6 +391,20 @@ export default function CustomerEditSitePage({ params }: { params: { slug: strin
           {additionalExtraPagesNeeded > 0 && planKey !== 'free' && <div className="notice danger" style={{marginTop: 18}}>
             <strong>Extra page checkout required:</strong> You selected {additionalExtraPagesNeeded} new extra page{additionalExtraPagesNeeded > 1 ? 's' : ''}. Extra pages are $10/month per page.
           </div>}
+
+          <div className="editable-card-group page-content-editor">
+            <h3>Page Wording</h3>
+            <p className="small">Add the customer’s own information for About, Services, Gallery, Contact, FAQ, and any other selected page.</p>
+            {selectedPages.filter(page => page !== 'Home').map(page => {
+              const content = normalizePageContent(site.pageContent || site.page_content, selectedPages)[page] || { title: page, body: '' };
+              return <div className="mini-edit-card" key={page}>
+                <h4>{page} Page</h4>
+                <div className="field"><label>{page} Title</label><input value={content.title} onChange={e => updatePageContent(page, 'title', e.target.value)} /></div>
+                <div className="field"><label>{page} Wording</label><textarea className="large-textarea tall-textarea" value={content.body} onChange={e => updatePageContent(page, 'body', e.target.value)} /></div>
+              </div>;
+            })}
+          </div>
+
           <div className="controls">
             <button className="btn gold" onClick={() => saveSite()} disabled={saving}>{saving ? 'Saving...' : additionalExtraPagesNeeded > 0 && planKey !== 'free' ? 'Checkout Extra Pages & Republish' : 'Save & Republish'}</button>
             {planKey !== 'free' && extraPageCheckoutUrl && <button className="btn secondary" onClick={() => startExtraPageCheckout(selectedPages)}>Add Extra Page — $10/mo</button>}
