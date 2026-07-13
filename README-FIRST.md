@@ -1,7 +1,29 @@
-# Cookie Mini Website Builder Pro — Verbiage + 3D Template Visual Update
+# Cookie AI Video Studio Demo Add-On
 
-Upload the inside files/folders from this ZIP to your GitHub repo and commit changes. Vercel should redeploy automatically.
+This add-on creates a new page:
 
-This update changes the extra-page support wording, adds a Contact Us button, and gives the published templates a stronger 3D-style visual difference.
+https://www.cookiesdigitalcreations.com/video-studio
 
-Pricing note: This update does not force the new free-page pricing yet. Review the pricing ideas in ChatGPT first, then update the app once the final plan is chosen.
+It is demo/safe mode only. It generates scripts, captions, shot ideas, and AI video prompts without connecting to a paid video API yet.
+
+## Upload steps
+
+1. Unzip this package.
+2. Open GitHub repo: `cookie-mini-website-builder-pro`.
+3. Click **Code → Add file → Upload files**.
+4. Upload the inside `app` folder and this README.
+5. Click **Commit changes**.
+6. Wait for Vercel to redeploy and show **Ready**.
+7. Open `/video-studio` to test it.
+
+## Suggested business setup
+
+Add this feature now in demo mode. After the core builder and pricing are stable, connect a real AI video provider and limit video generations by subscription plan.
+
+Suggested limits later:
+
+- Free: no real AI video, script/prompt only
+- Starter: script/prompt only or 1 demo credit
+- Business: 1 short video/month
+- Premium: 3 short videos/month
+- Extra video pack: paid add-on
