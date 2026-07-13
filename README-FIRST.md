@@ -1,12 +1,12 @@
-Cookie AI Video Studio Options Update
+# Cookie Mini Website Builder Pro — AI Video Full Kit Download Fix
 
-Upload the inside files/folders to GitHub, then let Vercel redeploy.
+Upload the inside files/folders to GitHub, commit changes, and wait for Vercel to redeploy.
 
-This update improves /video-studio so after customers click Generate Video Kit, they now get:
-- Output tabs: Script, Captions, Shot List, Video Prompt, Voiceover, Next Steps
-- Regenerate New Version button
-- Make It Funnier / Luxury / 3D buttons
-- Download full kit as a text file
-- Copy full kit option
-- Platform, length, music feel, and voice style options
-- Clear note that real AI video generation can be connected later
+This update changes the AI Video Studio download flow:
+
+- Download Full Kit now downloads a styled HTML kit instead of only a plain .txt file.
+- Adds a Storyboard tab with scene cards.
+- Adds Download Text Kit as a separate option.
+- Adds Open Printable Kit.
+- Adds a notice after download so customers understand where the file went.
+- Clarifies that this is a creative video kit, not an MP4 video, until a paid AI video API is connected.
