@@ -3,17 +3,20 @@
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import {
+  defaultOfferTitle,
   getBillingLabel,
   getExtraPageCount,
   getPlanPrice,
-  normalizePages,
   normalizePageContent,
+  normalizePages,
   normalizeServiceCards,
-  defaultOfferTitle,
+  pageCopy,
   pageOptions,
   plans,
   templates,
+  type PageContentMap,
   type PlanKey,
+  type ServiceCard,
   type TemplateKey
 } from '@/lib/templates';
 import { CustomerSiteView } from '@/lib/site-view';
@@ -45,8 +48,16 @@ function isTemplateDefaultText(value: string, field: 'headline' | 'description')
 
 function friendlyPageLimit(plan: PlanKey) {
   const info = plans[plan];
-  if (plan === 'free') return 'Free Launch Page includes Home only. Upgrade to Starter, Business, or Premium to add more pages.';
+  if (plan === 'free') return 'Free plan includes Home only. Upgrade to Starter, Business, or Premium to add more pages.';
   return info.allPages ? 'Premium includes all available pages.' : `${info.name} includes ${info.maxPages} page${info.maxPages > 1 ? 's' : ''}. Extra pages are $10/month per page.`;
+}
+
+function cleanPageContent(content: any, pages: string[]) {
+  return normalizePageContent(content, pages);
+}
+
+function cloneServiceCards(cards: ServiceCard[]) {
+  return cards.map(card => ({ title: card.title || '', text: card.text || '' }));
 }
 
 export default function CustomerEditSitePage({ params }: { params: { slug: string } }) {
@@ -59,6 +70,7 @@ export default function CustomerEditSitePage({ params }: { params: { slug: strin
   const starterCheckoutUrl = normalizeCheckoutUrl(process.env.NEXT_PUBLIC_STARTER_SUBSCRIPTION_CHECKOUT_URL);
   const businessCheckoutUrl = normalizeCheckoutUrl(process.env.NEXT_PUBLIC_BUSINESS_SUBSCRIPTION_CHECKOUT_URL);
   const premiumCheckoutUrl = normalizeCheckoutUrl(process.env.NEXT_PUBLIC_PREMIUM_SUBSCRIPTION_CHECKOUT_URL);
+  const supportEmail = process.env.NEXT_PUBLIC_SUPPORT_EMAIL || `support@${rootDomain}`;
 
   useEffect(() => {
     const savedEmail = localStorage.getItem('cookie-customer-email') || '';
@@ -85,6 +97,9 @@ export default function CustomerEditSitePage({ params }: { params: { slug: strin
       if (!response.ok || !data.ok) throw new Error(data.error || 'Could not load site.');
       const loaded = data.site;
       const templateKey = templates[loaded.template as TemplateKey] ? loaded.template : 'local';
+      const pages = normalizePages(loaded.pages);
+      const serviceCards = normalizeServiceCards(loaded.serviceCards || loaded.service_cards, templateKey);
+      const pageContent = cleanPageContent(loaded.pageContent || loaded.page_content, pages);
       setSite({
         ...loaded,
         businessName: loaded.businessName || loaded.business_name || '',
@@ -93,13 +108,10 @@ export default function CustomerEditSitePage({ params }: { params: { slug: strin
         template: templateKey,
         primaryColor: loaded.primaryColor || templates[templateKey as TemplateKey].defaultPrimary,
         accentColor: loaded.accentColor || templates[templateKey as TemplateKey].defaultAccent,
-        pages: normalizePages(loaded.pages),
-        serviceCards: normalizeServiceCards(loaded.serviceCards || loaded.service_cards, templateKey),
-        service_cards: normalizeServiceCards(loaded.serviceCards || loaded.service_cards, templateKey),
-        pageContent: normalizePageContent(loaded.pageContent || loaded.page_content, normalizePages(loaded.pages)),
-        page_content: normalizePageContent(loaded.pageContent || loaded.page_content, normalizePages(loaded.pages)),
+        pages,
         offerTitle: loaded.offerTitle || loaded.offer_title || defaultOfferTitle,
-        offer_title: loaded.offer_title || loaded.offerTitle || defaultOfferTitle
+        serviceCards: cloneServiceCards(serviceCards),
+        pageContent
       });
       localStorage.setItem('cookie-customer-email', customerEmail);
       localStorage.setItem('cookie-customer-slug', params.slug);
@@ -115,31 +127,32 @@ export default function CustomerEditSitePage({ params }: { params: { slug: strin
       const next = { ...current, [field]: value };
       if (field === 'businessName') next.business_name = value;
       if (field === 'business_name') next.businessName = value;
-      if (field === 'offerTitle') next.offer_title = value;
-      if (field === 'offer_title') next.offerTitle = value;
       return next;
     });
   }
 
-
-  function updateServiceCard(index: number, field: 'title' | 'text', value: string) {
+  function updateServiceCard(index: number, field: keyof ServiceCard, value: string) {
     setSite((current: any) => {
       if (!current) return current;
       const templateKey = templates[current.template as TemplateKey] ? current.template as TemplateKey : 'local';
-      const cards = normalizeServiceCards(current.serviceCards || current.service_cards, templateKey);
-      const nextCards = cards.map((card, cardIndex) => cardIndex === index ? { ...card, [field]: value } : card);
-      return { ...current, serviceCards: nextCards, service_cards: nextCards };
+      const cards = cloneServiceCards(normalizeServiceCards(current.serviceCards || current.service_cards, templateKey));
+      while (cards.length < 3) cards.push({ title: `Offer ${cards.length + 1}`, text: '' });
+      cards[index] = { ...cards[index], [field]: value };
+      return { ...current, serviceCards: cards };
     });
   }
 
   function updatePageContent(page: string, field: 'title' | 'body', value: string) {
     setSite((current: any) => {
       if (!current) return current;
-      const currentPages = normalizePages(current.pages);
-      const content = normalizePageContent(current.pageContent || current.page_content, currentPages);
-      const fallback = content[page] || { title: page, body: '' };
-      const nextContent = { ...content, [page]: { ...fallback, [field]: value } };
-      return { ...current, pageContent: nextContent, page_content: nextContent };
+      const pages = normalizePages(current.pages);
+      const content = cleanPageContent(current.pageContent || current.page_content, pages);
+      const fallback = pageCopy[page] || { title: page, body: '' };
+      content[page] = {
+        title: field === 'title' ? value : (content[page]?.title || fallback.title || page),
+        body: field === 'body' ? value : (content[page]?.body || fallback.body || '')
+      };
+      return { ...current, pageContent: content };
     });
   }
 
@@ -149,13 +162,16 @@ export default function CustomerEditSitePage({ params }: { params: { slug: strin
       if (!current) return current;
       const currentHeadline = String(current?.headline ?? '');
       const currentDescription = String(current?.description ?? '');
+      const pages = normalizePages(current.pages);
       return {
         ...current,
         template: nextTemplate,
         primaryColor: template.defaultPrimary,
         accentColor: template.defaultAccent,
         headline: isTemplateDefaultText(currentHeadline, 'headline') ? template.headline : currentHeadline,
-        description: isTemplateDefaultText(currentDescription, 'description') ? template.description : currentDescription
+        description: isTemplateDefaultText(currentDescription, 'description') ? template.description : currentDescription,
+        serviceCards: cloneServiceCards(normalizeServiceCards(current.serviceCards || current.service_cards, nextTemplate)),
+        pageContent: cleanPageContent(current.pageContent || current.page_content, pages)
       };
     });
     setMessage(`Template changed to ${template.name}. The preview changed immediately. Click Save & Republish to update the live website.`);
@@ -164,6 +180,8 @@ export default function CustomerEditSitePage({ params }: { params: { slug: strin
   const planKey = useMemo<PlanKey>(() => normalizePlan(site?.plan), [site]);
   const planInfo = plans[planKey];
   const selectedPages = normalizePages(site?.pages || ['Home']);
+  const visiblePageContent: PageContentMap = useMemo(() => cleanPageContent(site?.pageContent || site?.page_content, selectedPages), [site?.pageContent, site?.page_content, selectedPages.join('|')]);
+  const visibleServiceCards = useMemo(() => cloneServiceCards(normalizeServiceCards(site?.serviceCards || site?.service_cards, site?.template || 'local')), [site?.serviceCards, site?.service_cards, site?.template]);
   const neededExtraPages = planKey === 'free' ? 0 : getExtraPageCount(planKey, selectedPages.length);
   const alreadyPaidExtraPages = Number(site?.extra_page_count || 0);
   const additionalExtraPagesNeeded = Math.max(0, neededExtraPages - alreadyPaidExtraPages);
@@ -189,13 +207,13 @@ export default function CustomerEditSitePage({ params }: { params: { slug: strin
       primaryColor: site?.primaryColor || templates[(site?.template || 'local') as TemplateKey]?.defaultPrimary || '#20172f',
       accentColor: site?.accentColor || templates[(site?.template || 'local') as TemplateKey]?.defaultAccent || '#c46a2d',
       pages: pagesToSave,
+      offerTitle: site?.offerTitle || defaultOfferTitle,
+      serviceCards: visibleServiceCards,
+      pageContent: cleanPageContent(site?.pageContent || site?.page_content, pagesToSave),
       billing: 'subscription',
       extraPageCount: Math.max(pendingNeededExtraPages, alreadyPaidExtraPages + Math.max(0, pendingNeededExtraPages - alreadyPaidExtraPages)),
       price: pendingPrice,
       priceLabel: pendingPriceLabel,
-      offerTitle: site?.offerTitle || site?.offer_title || defaultOfferTitle,
-      serviceCards: normalizeServiceCards(site?.serviceCards || site?.service_cards, site?.template || 'local'),
-      pageContent: normalizePageContent(site?.pageContent || site?.page_content, pagesToSave),
       paymentStartedAt: new Date().toISOString()
     };
   }
@@ -204,7 +222,7 @@ export default function CustomerEditSitePage({ params }: { params: { slug: strin
     if (!site) return;
     const customerEmail = email.trim().toLowerCase();
     if (!extraPageCheckoutUrl) {
-      setMessage('Extra page checkout link is missing. Add NEXT_PUBLIC_EXTRA_PAGE_SUBSCRIPTION_CHECKOUT_URL in Vercel, then redeploy.');
+      setMessage('Extra page checkout link is missing. Add NEXT_PUBLIC_EXTRA_PAGE_SUBSCRIPTION_CHECKOUT_URL in Vercel, then redeploy. Any issues, click the Contact Us button for help.');
       return;
     }
     const pendingSite = buildPendingSite(pageOverride);
@@ -224,7 +242,7 @@ export default function CustomerEditSitePage({ params }: { params: { slug: strin
     const extraNeeded = Math.max(0, nextNeededExtraPages - alreadyPaidExtraPages);
 
     if (!selected && planKey === 'free') {
-      setMessage('Free Launch Page includes Home only. Choose a paid upgrade first to add more pages.');
+      setMessage('Free plan includes Home only. Choose a paid upgrade first to add more pages.');
       return;
     }
 
@@ -234,12 +252,16 @@ export default function CustomerEditSitePage({ params }: { params: { slug: strin
       return;
     }
 
-    setSite((current: any) => ({ ...current, pages: nextPages }));
-    setMessage(selected ? `${page} removed from this website. Click Save & Republish to update the live website.` : `${page} added. Click Save & Republish to update the live website.`);
+    setSite((current: any) => ({
+      ...current,
+      pages: nextPages,
+      pageContent: cleanPageContent(current.pageContent || current.page_content, nextPages)
+    }));
+    setMessage(selected ? `${page} removed from this website. Click Save & Republish to update the live website.` : `${page} added. Add your own wording below, then click Save & Republish.`);
   }
 
   function resetPages() {
-    setSite((current: any) => ({ ...current, pages: ['Home'] }));
+    setSite((current: any) => ({ ...current, pages: ['Home'], pageContent: {} }));
     setMessage('Pages reset to Home only. Click Save & Republish to update the live website.');
   }
 
@@ -261,6 +283,9 @@ export default function CustomerEditSitePage({ params }: { params: { slug: strin
     setSaving(true);
     setMessage('Saving and republishing your website updates...');
     try {
+      const pagesToSave = planKey === 'free' ? ['Home'] : selectedPages;
+      const contentToSave = cleanPageContent(site.pageContent || site.page_content, pagesToSave);
+      const cardsToSave = cloneServiceCards(normalizeServiceCards(site.serviceCards || site.service_cards, site.template || 'local'));
       const payload = {
         slug: params.slug,
         businessName: site.businessName || site.business_name || params.slug,
@@ -274,16 +299,16 @@ export default function CustomerEditSitePage({ params }: { params: { slug: strin
         email: site.email || customerEmail,
         primaryColor: site.primaryColor || templates[(site.template || 'local') as TemplateKey]?.defaultPrimary || '#20172f',
         accentColor: site.accentColor || templates[(site.template || 'local') as TemplateKey]?.defaultAccent || '#c46a2d',
-        pages: planKey === 'free' ? ['Home'] : selectedPages,
+        pages: pagesToSave,
+        offerTitle: site.offerTitle || defaultOfferTitle,
+        offer_title: site.offerTitle || defaultOfferTitle,
+        serviceCards: cardsToSave,
+        service_cards: cardsToSave,
+        pageContent: contentToSave,
+        page_content: contentToSave,
         extra_page_count: planKey === 'free' ? 0 : Math.max(neededExtraPages, alreadyPaidExtraPages),
         monthly_price: planKey === 'free' ? 0 : price,
         price_label: planKey === 'free' ? 'Free' : priceLabel,
-        offerTitle: site.offerTitle || site.offer_title || defaultOfferTitle,
-        offer_title: site.offerTitle || site.offer_title || defaultOfferTitle,
-        serviceCards: normalizeServiceCards(site.serviceCards || site.service_cards, site.template || 'local'),
-        service_cards: normalizeServiceCards(site.serviceCards || site.service_cards, site.template || 'local'),
-        pageContent: normalizePageContent(site.pageContent || site.page_content, selectedPages),
-        page_content: normalizePageContent(site.pageContent || site.page_content, selectedPages),
         status: 'published'
       };
       const response = await fetch(`/api/customer/sites/${params.slug}?t=${Date.now()}`, {
@@ -294,21 +319,21 @@ export default function CustomerEditSitePage({ params }: { params: { slug: strin
       const data = await response.json();
       if (!response.ok || !data.ok) throw new Error(data.error || 'Could not save site.');
       const savedSite = data.site || payload;
+      const savedPages = normalizePages(savedSite.pages);
+      const savedTemplate = templates[savedSite.template as TemplateKey] ? savedSite.template as TemplateKey : 'local';
       setSite({
         ...savedSite,
         businessName: savedSite.businessName || savedSite.business_name || payload.businessName,
         business_name: savedSite.business_name || savedSite.businessName || payload.businessName,
-        pages: normalizePages(savedSite.pages),
-        serviceCards: normalizeServiceCards(savedSite.serviceCards || savedSite.service_cards, savedSite.template || payload.template || 'local'),
-        service_cards: normalizeServiceCards(savedSite.serviceCards || savedSite.service_cards, savedSite.template || payload.template || 'local'),
-        pageContent: normalizePageContent(savedSite.pageContent || savedSite.page_content, normalizePages(savedSite.pages)),
-        page_content: normalizePageContent(savedSite.pageContent || savedSite.page_content, normalizePages(savedSite.pages)),
-        offerTitle: savedSite.offerTitle || savedSite.offer_title || payload.offerTitle || defaultOfferTitle,
-        offer_title: savedSite.offer_title || savedSite.offerTitle || payload.offerTitle || defaultOfferTitle
+        template: savedTemplate,
+        pages: savedPages,
+        offerTitle: savedSite.offerTitle || savedSite.offer_title || payload.offerTitle,
+        serviceCards: cloneServiceCards(normalizeServiceCards(savedSite.serviceCards || savedSite.service_cards || payload.serviceCards, savedTemplate)),
+        pageContent: cleanPageContent(savedSite.pageContent || savedSite.page_content || payload.pageContent, savedPages)
       });
       localStorage.setItem('cookie-customer-email', customerEmail);
       localStorage.setItem('cookie-customer-slug', params.slug);
-      setMessage('Saved and republished. Refresh or reopen the live website to see the newest wording, template, and pages.');
+      setMessage('Saved and republished. Refresh or reopen the live website to see the newest wording, template, colors, and pages.');
     } catch (error: any) {
       setMessage(error.message || 'Could not save site.');
     } finally {
@@ -322,6 +347,7 @@ export default function CustomerEditSitePage({ params }: { params: { slug: strin
       <div className="navlinks">
         <Link href="/customer">Customer Dashboard</Link>
         <Link href="/builder">Create Site</Link>
+        <Link href="/video-studio">AI Video Studio</Link>
         <Link href="/">Home</Link>
       </div>
     </nav>
@@ -329,7 +355,7 @@ export default function CustomerEditSitePage({ params }: { params: { slug: strin
     <section className="card">
       <span className="badge">Customer editor</span>
       <h1>Edit {site?.businessName || params.slug}</h1>
-      <p>Edit the wording, template, colors, and pages. The preview stays beside the editor so customers can see changes while they work.</p>
+      <p>Edit the wording, template, colors, offer boxes, and page content. The preview stays beside the editor so customers can see changes while they work.</p>
       <div className="admin-pin-row">
         <input value={email} onChange={e => setEmail(e.target.value)} placeholder="Email used for this website" type="email" />
         <button className="btn secondary" onClick={() => loadSite()} disabled={!email}>Load Site</button>
@@ -341,27 +367,29 @@ export default function CustomerEditSitePage({ params }: { params: { slug: strin
       <div className="customer-edit-controls">
         <section className="card">
           <h2>Content</h2>
-          <p className="small">Type as much wording as needed. The preview updates right away, then Save & Republish makes it live.</p>
+          <p className="small">These fields control the Home section of the live website. Longer wording is okay.</p>
           <div className="field"><label>Business Name</label><input value={site.businessName || ''} onChange={e => update('businessName', e.target.value)} /></div>
           <div className="field"><label>Headline</label><textarea className="large-textarea" value={site.headline ?? ''} onChange={e => update('headline', e.target.value)} placeholder="Write the main headline here" /></div>
           <div className="field"><label>Description / Main Website Message</label><textarea className="large-textarea tall-textarea" value={site.description ?? ''} onChange={e => update('description', e.target.value)} placeholder="Write a full business description here. Longer text is okay." /></div>
-          <div className="field"><label>Services Section Title</label><input value={site.offerTitle || site.offer_title || defaultOfferTitle} onChange={e => update('offerTitle', e.target.value)} placeholder="Example: Services & Offers" /></div>
-          <div className="editable-card-group">
-            <h3>Service / Offer Boxes</h3>
-            <p className="small">Edit the 3 feature boxes customers see on the website. Add what the business actually offers.</p>
-            {normalizeServiceCards(site.serviceCards || site.service_cards, site.template || 'local').map((card, index) => <div className="mini-edit-card" key={index}>
-              <div className="field"><label>Box {index + 1} Title</label><input value={card.title} onChange={e => updateServiceCard(index, 'title', e.target.value)} /></div>
-              <div className="field"><label>Box {index + 1} Details</label><textarea className="large-textarea" value={card.text} onChange={e => updateServiceCard(index, 'text', e.target.value)} /></div>
-            </div>)}
-          </div>
-          <div className="field"><label>Phone</label><input value={site.phone || ''} onChange={e => update('phone', e.target.value)} placeholder="Optional. This will show in the contact section, not the top hero." /></div>
+          <div className="field"><label>Phone</label><input value={site.phone || ''} onChange={e => update('phone', e.target.value)} placeholder="Optional. This will show only in the contact section." /></div>
           <div className="field"><label>Email</label><input value={site.email || ''} onChange={e => update('email', e.target.value)} placeholder="This opens when visitors click Contact Now." /></div>
         </section>
 
         <section className="card">
+          <h2>Offer Boxes</h2>
+          <p className="small">Customers can replace the template wording with their own services, products, packages, or offers.</p>
+          <div className="field"><label>Section Title</label><input value={site.offerTitle || defaultOfferTitle} onChange={e => update('offerTitle', e.target.value)} placeholder="Example: Services, Packages, What I Offer" /></div>
+          {visibleServiceCards.slice(0, 3).map((card, index) => <div className="nested-edit-card" key={index}>
+            <h3>Offer Box {index + 1}</h3>
+            <div className="field"><label>Title</label><input value={card.title || ''} onChange={e => updateServiceCard(index, 'title', e.target.value)} placeholder="Example: Landing Pages" /></div>
+            <div className="field"><label>Description</label><textarea className="large-textarea" value={card.text || ''} onChange={e => updateServiceCard(index, 'text', e.target.value)} placeholder="Describe this service, product, or offer." /></div>
+          </div>)}
+        </section>
+
+        <section className="card">
           <h2>Design</h2>
-          <p className="small">Templates now change layout, artwork, colors, and the visual style so customers can tell the difference.</p>
-          <div className="field"><label>Template</label><select value={site.template || 'local'} onChange={e => applyTemplate(e.target.value as TemplateKey)}>{(Object.entries(templates) as Array<[TemplateKey, any]>).map(([key, item]) => <option value={key} key={key}>{item.name} — {item.tone}</option>)}</select></div>
+          <p className="small">Templates change layout, 3D-style artwork, colors, and the visual style so customers can tell the difference.</p>
+          <div className="field"><label>Template</label><select value={site.template || 'local'} onChange={e => applyTemplate(e.target.value as TemplateKey)}>{(Object.entries(templates) as Array<[TemplateKey, any]>).map(([key, item]) => <option value={key} key={key}>{item.name}</option>)}</select></div>
           <div className="template-mini-grid">
             {(Object.entries(templates) as Array<[TemplateKey, any]>).map(([key, item]) => <button type="button" key={key} onClick={() => applyTemplate(key)} className={`template-mini ${site.template === key ? 'active' : ''}`}>
               <span style={{background: `linear-gradient(135deg, ${item.defaultPrimary}, ${item.defaultAccent})`}}>{item.art.icon}</span>
@@ -391,23 +419,29 @@ export default function CustomerEditSitePage({ params }: { params: { slug: strin
           {additionalExtraPagesNeeded > 0 && planKey !== 'free' && <div className="notice danger" style={{marginTop: 18}}>
             <strong>Extra page checkout required:</strong> You selected {additionalExtraPagesNeeded} new extra page{additionalExtraPagesNeeded > 1 ? 's' : ''}. Extra pages are $10/month per page.
           </div>}
+        </section>
 
-          <div className="editable-card-group page-content-editor">
-            <h3>Page Wording</h3>
-            <p className="small">Add the customer’s own information for About, Services, Gallery, Contact, FAQ, and any other selected page.</p>
-            {selectedPages.filter(page => page !== 'Home').map(page => {
-              const content = normalizePageContent(site.pageContent || site.page_content, selectedPages)[page] || { title: page, body: '' };
-              return <div className="mini-edit-card" key={page}>
-                <h4>{page} Page</h4>
-                <div className="field"><label>{page} Title</label><input value={content.title} onChange={e => updatePageContent(page, 'title', e.target.value)} /></div>
-                <div className="field"><label>{page} Wording</label><textarea className="large-textarea tall-textarea" value={content.body} onChange={e => updatePageContent(page, 'body', e.target.value)} /></div>
-              </div>;
-            })}
-          </div>
+        <section className="card">
+          <h2>Page Wording</h2>
+          <p className="small">Add the customer’s own information for About, Services, Products, Gallery, Testimonials, Contact, and FAQ. Only selected pages show here.</p>
+          {selectedPages.filter(page => page !== 'Home').length === 0 && <div className="notice">Only Home is selected right now. Add another page above to edit more page wording.</div>}
+          {selectedPages.filter(page => page !== 'Home').map(page => {
+            const copy = visiblePageContent[page] || pageCopy[page] || { title: page, body: '' };
+            return <div className="nested-edit-card" key={page}>
+              <h3>{page} Page / Section</h3>
+              <div className="field"><label>{page} Title</label><input value={copy.title || ''} onChange={e => updatePageContent(page, 'title', e.target.value)} placeholder={`${page} section title`} /></div>
+              <div className="field"><label>{page} Wording</label><textarea className="large-textarea tall-textarea" value={copy.body || ''} onChange={e => updatePageContent(page, 'body', e.target.value)} placeholder={`Add the customer's ${page.toLowerCase()} information here.`} /></div>
+            </div>;
+          })}
+        </section>
 
+        <section className="card">
+          <h2>Save / Publish</h2>
+          <p className="small">Any issues, click the Contact Us button for help.</p>
           <div className="controls">
             <button className="btn gold" onClick={() => saveSite()} disabled={saving}>{saving ? 'Saving...' : additionalExtraPagesNeeded > 0 && planKey !== 'free' ? 'Checkout Extra Pages & Republish' : 'Save & Republish'}</button>
             {planKey !== 'free' && extraPageCheckoutUrl && <button className="btn secondary" onClick={() => startExtraPageCheckout(selectedPages)}>Add Extra Page — $10/mo</button>}
+            <a className="btn secondary" href={`mailto:${supportEmail}?subject=Cookie%20Mini%20Website%20Builder%20Help`}>Contact Us</a>
             <button className="btn secondary" onClick={resetPages}>Reset Pages</button>
             <a className="btn secondary" href={direct} target="_blank" rel="noreferrer">Open Direct Link</a>
             <a className="btn secondary" href={subdomain} target="_blank" rel="noreferrer">Open Subdomain</a>
@@ -424,7 +458,14 @@ export default function CustomerEditSitePage({ params }: { params: { slug: strin
           </div>
           <button className="btn gold" onClick={() => saveSite()} disabled={saving}>{saving ? 'Saving...' : 'Save'}</button>
         </div>
-        <CustomerSiteView site={{...site, pages: planKey === 'free' ? ['Home'] : selectedPages, plan: planKey}} previewLabel="Live Editing Preview" />
+        <CustomerSiteView site={{
+          ...site,
+          pages: planKey === 'free' ? ['Home'] : selectedPages,
+          plan: planKey,
+          serviceCards: visibleServiceCards,
+          pageContent: visiblePageContent,
+          offerTitle: site.offerTitle || defaultOfferTitle
+        }} previewLabel="Website Preview" />
       </aside>
     </div>}
   </main>;

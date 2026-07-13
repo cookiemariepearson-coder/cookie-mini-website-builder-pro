@@ -708,3 +708,36 @@ textarea { min-height: 88px; resize: vertical; }
 .published-site .section-eyebrow {
   color: var(--accent);
 }
+
+/* Customer content editor deep fix */
+.nested-edit-card {
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  background: linear-gradient(180deg, #fff, #fffaf4);
+  padding: 16px;
+  margin: 14px 0;
+}
+.nested-edit-card h3 {
+  margin: 0 0 12px;
+  font-size: 18px;
+}
+.customer-edit-controls textarea,
+.customer-edit-controls input,
+.customer-edit-controls select {
+  width: 100%;
+}
+.customer-edit-controls textarea {
+  resize: vertical;
+}
+.published-site .service-card {
+  border-color: color-mix(in srgb, var(--accent) 38%, var(--line));
+  box-shadow: 0 18px 42px color-mix(in srgb, var(--accent) 18%, transparent);
+}
+.published-site .service-card h3,
+.published-site .section-eyebrow {
+  color: var(--accent);
+}
+.published-site .template-art-card strong,
+.published-site .template-art-card span {
+  text-align: center;
+}

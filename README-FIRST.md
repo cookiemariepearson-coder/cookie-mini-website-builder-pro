@@ -1,24 +1,19 @@
-Cookie Mini Website Builder Pro — Customer Content Editing Fix
+# Cookie Mini Website Builder Pro — Customer Content Deep Fix
 
-Upload the inside files/folders to GitHub and commit changes.
+This update focuses only on the customer editor/live website issues:
 
-IMPORTANT FIRST STEP:
-Before testing the customer editor, run this SQL once in Supabase SQL Editor:
+- Adds real editing fields for the 3 offer/service boxes.
+- Adds real editing fields for About, Services, Products, Gallery, Testimonials, Contact, and FAQ.
+- Saves those fields to Supabase and republishes them.
+- Removes generic template labels from the customer-facing template selector.
+- Keeps the live website clean so plan wording such as Free Launch Page does not appear on the customer website.
+- Improves accent color visibility on the live website.
+- Keeps Contact Now as an email button.
 
-supabase/customer_content_fields_migration.sql
+## Important Supabase step
 
-This adds the database fields needed for customers to save:
-- service/offer boxes
-- page wording for About, Services, Products, Gallery, Testimonials, Contact, FAQ
-- editable Services section title
+Run this SQL once in Supabase SQL Editor if you have not already:
 
-What changed:
-- Free Launch Page wording no longer appears on the customer live website.
-- Accent color now affects the live website templates better.
-- Template labels no longer show “3D local service layout” wording.
-- Customers can edit service/offer boxes.
-- Customers can edit page wording for selected pages.
-- “What We Offer” is no longer hardcoded; customers can change the section title.
-- Contact button still opens the customer email.
+`supabase/customer_content_fields_migration.sql`
 
-Do not upload node_modules or .next.
+Then upload this package's inside files/folders to GitHub and let Vercel redeploy.
