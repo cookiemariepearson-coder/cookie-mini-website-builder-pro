@@ -15,7 +15,7 @@ const videoTypes = [
   "TikTok/Reels Hook Video"
 ];
 
-const styles = [
+const styleOptions = [
   "Professional",
   "Luxury",
   "Funny & Sassy",
@@ -61,7 +61,7 @@ export default function VideoStudioPage() {
   const [offer, setOffer] = useState("");
   const [audience, setAudience] = useState("");
   const [videoType, setVideoType] = useState(videoTypes[0]);
-  const [vibe, setVibe] = useState(styles[0]);
+  const [vibe, setVibe] = useState(styleOptions[0]);
   const [cta, setCta] = useState("Visit our website today");
   const [generated, setGenerated] = useState(false);
 
@@ -121,7 +121,7 @@ export default function VideoStudioPage() {
           <label>
             Style
             <select value={vibe} onChange={(e) => setVibe(e.target.value)}>
-              {styles.map((style) => <option key={style}>{style}</option>)}
+              {styleOptions.map((style) => <option key={style}>{style}</option>)}
             </select>
           </label>
           <label>
