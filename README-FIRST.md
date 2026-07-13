@@ -1,19 +1,31 @@
-# Cookie Mini Website Builder Pro — Customer Content Deep Fix
+# Cookie Mini Website Builder Pro — Section Editor Hard Fix
 
-This update focuses only on the customer editor/live website issues:
+This package fixes the customer editor so the editable section boxes are actually visible and wired into Supabase.
 
-- Adds real editing fields for the 3 offer/service boxes.
-- Adds real editing fields for About, Services, Products, Gallery, Testimonials, Contact, and FAQ.
-- Saves those fields to Supabase and republishes them.
-- Removes generic template labels from the customer-facing template selector.
-- Keeps the live website clean so plan wording such as Free Launch Page does not appear on the customer website.
-- Improves accent color visibility on the live website.
-- Keeps Contact Now as an email button.
+## What this update fixes
+
+- Adds editable fields for the 3 offer/service boxes.
+- Adds editable fields for About, Services, Products, Gallery, Testimonials, Contact, and FAQ.
+- Adds editable fields for the 3D artwork card title/details.
+- Removes internal template badge wording from the live customer website hero.
+- Keeps the Contact Now button opening the customer email.
+- Makes accent color affect the public site through CSS variables.
+- Stops Business/Starter customers from silently adding extra pages without the add-on checkout.
+- Updates dashboard wording to say: Any issues, click the Contact Us button for help.
 
 ## Important Supabase step
 
-Run this SQL once in Supabase SQL Editor if you have not already:
+Run this file again in Supabase SQL Editor. It is safe to run again because it uses `add column if not exists`:
 
-`supabase/customer_content_fields_migration.sql`
+supabase/customer_content_fields_migration.sql
 
-Then upload this package's inside files/folders to GitHub and let Vercel redeploy.
+## Upload steps
+
+1. Unzip this package.
+2. In GitHub, open the `cookie-mini-website-builder-pro` repo.
+3. Click Code → Add file → Upload files.
+4. Upload the inside files/folders from this package.
+5. Commit changes.
+6. Wait for Vercel to deploy and show Ready.
+7. Test /customer/edit/customer-slug.
+

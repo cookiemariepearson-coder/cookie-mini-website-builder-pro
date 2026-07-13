@@ -6,7 +6,6 @@ import {
   normalizeServiceCards,
   pageCopy,
   sectionId,
-  templateAccentWords,
   templateThemeClasses,
   templates,
   type TemplateKey
@@ -38,6 +37,17 @@ function valueOrDefault(value: any, fallback: string) {
   return value === undefined || value === null ? fallback : String(value);
 }
 
+function parsePageContent(value: any) {
+  if (value && typeof value === 'object' && !Array.isArray(value)) return value;
+  if (typeof value === 'string' && value.trim()) {
+    try {
+      const parsed = JSON.parse(value);
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) return parsed;
+    } catch {}
+  }
+  return {};
+}
+
 export function CustomerSiteView(props: SiteViewProps) {
   const source = props.site || props;
   const templateKey = safeTemplate(props.template ?? source.template);
@@ -55,9 +65,12 @@ export function CustomerSiteView(props: SiteViewProps) {
   const themeClass = templateThemeClasses[templateKey];
   const contactHref = email ? `mailto:${email}` : '#contact';
   const navPages = pages.includes('Contact') ? pages : [...pages, 'Contact'];
+  const rawPageContent = parsePageContent(props.pageContent ?? source.pageContent ?? source.page_content);
+  const pageContent = normalizePageContent(rawPageContent, pages);
+  const artTitle = valueOrDefault(rawPageContent?._art?.title, template.art.label);
+  const artDetails = valueOrDefault(rawPageContent?._art?.details, template.art.details);
   const serviceCards = normalizeServiceCards(props.serviceCards ?? source.serviceCards ?? source.service_cards, templateKey);
-  const pageContent = normalizePageContent(props.pageContent ?? source.pageContent ?? source.page_content, pages);
-  const servicePageContent = pageContent.Services || pageCopy.Services;
+  const servicePageContent = rawPageContent.Services || pageContent.Services || pageCopy.Services;
   const serviceSectionTitle = valueOrDefault(props.offerTitle ?? source.offerTitle ?? source.offer_title, servicePageContent?.title || defaultOfferTitle);
   const serviceSectionBody = valueOrDefault(servicePageContent?.body, '');
 
@@ -80,23 +93,22 @@ export function CustomerSiteView(props: SiteViewProps) {
 
     <section id="home" className="site-hero" style={{background: `linear-gradient(135deg, ${primaryColor}, ${accentColor})`, color: 'white'}}>
       <div className="hero-content-block">
-        <div className="hero-kicker">{props.previewLabel || templateAccentWords[templateKey]}</div>
-        <span className="badge" style={{color: primaryColor}}>{template.name}</span>
+        {props.previewLabel && <div className="hero-kicker">{props.previewLabel}</div>}
         <h1>{headline}</h1>
         <p className="hero-description" style={{color:'rgba(255,255,255,.92)'}}>{description}</p>
         <div className="hero-actions">
           <a className="btn gold" href={contactHref}>Contact Now</a>
         </div>
       </div>
-      <div className="template-art-card art-scene" aria-label={`${template.name} artwork`}>
+      <div className="template-art-card art-scene" aria-label="Website artwork">
         <div className="template-art-glow" />
         <div className="art-stack-3d">
           <div className="art-layer art-layer-back"><span>{template.art.icon}</span></div>
           <div className="art-layer art-layer-mid"><i /><i /><i /></div>
           <div className="art-layer art-layer-front"><b>{template.art.icon}</b></div>
         </div>
-        <strong>{template.art.label}</strong>
-        <span>{template.art.details}</span>
+        <strong>{artTitle}</strong>
+        <span>{artDetails}</span>
         <div className="art-orbit orbit-one" />
         <div className="art-orbit orbit-two" />
         <div className="art-chip-row"><em /><em /><em /></div>
