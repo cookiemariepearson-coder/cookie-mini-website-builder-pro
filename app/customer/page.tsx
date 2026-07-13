@@ -91,6 +91,7 @@ export default function CustomerDashboardPage() {
       <div className="navlinks">
         <Link href="/builder">Create Site</Link>
         <Link href="/dashboard">Owner Dashboard</Link>
+        <Link href="/video-studio">AI Video Studio</Link>
         <Link href="/">Home</Link>
       </div>
     </nav>
@@ -136,6 +137,7 @@ export default function CustomerDashboardPage() {
         <a className="btn gold" href={links.subdomain} target="_blank" rel="noreferrer">Open Live Website</a>
         <a className="btn secondary" href={links.direct} target="_blank" rel="noreferrer">Open Backup Direct Link</a>
         <Link className="btn secondary" href={`/customer/edit/${site.slug}`}>Edit Website Details</Link>
+        <Link className="btn gold" href="/video-studio">Create Promo Video</Link>
       </div>
 
       <div className="card" style={{boxShadow: 'none', marginTop: 18}}>

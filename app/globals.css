@@ -565,3 +565,27 @@ textarea { min-height: 88px; resize: vertical; }
   .art-stack-3d { height: 150px; }
   .art-layer-front b { font-size: 54px; }
 }
+
+/* AI Video Studio visibility patch */
+.video-studio-callout {
+  margin: 14px 0 16px;
+  padding: 14px;
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at top left, rgba(255,255,255,.35), transparent 42%),
+    linear-gradient(135deg, rgba(255,190,90,.22), rgba(139,92,246,.13));
+  border: 1px solid rgba(196,106,45,.24);
+  box-shadow: 0 12px 26px rgba(32,23,47,.09);
+}
+.video-studio-callout strong {
+  display: block;
+  margin-bottom: 6px;
+  color: #20172f;
+}
+.video-studio-callout p {
+  margin: 0 0 10px;
+  font-size: .86rem;
+  line-height: 1.45;
+  color: #6b6178;
+}
+.video-studio-callout .btn { width: 100%; justify-content: center; text-align: center; }

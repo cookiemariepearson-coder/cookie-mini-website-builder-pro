@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import { plans, templates, slugify, getPlanPrice, getBillingLabel, getExtraPageCount, EXTRA_PAGE_PRICE, normalizePages, pageOptions, type PlanKey, type TemplateKey } from '@/lib/templates';
 import { CustomerSiteView } from '@/lib/site-view';
@@ -86,6 +87,11 @@ export default function BuilderPage() {
     <main className="builder-shell">
       <aside className="sidebar">
         <div className="brand"><span className="logo">C</span> Cookie Mini Website Builder Pro</div>
+        <div className="video-studio-callout">
+          <strong>🎬 AI Video Generator</strong>
+          <p>Create promo scripts, captions, and AI video prompts for the website they are building.</p>
+          <Link className="btn gold" href="/video-studio">Open AI Video Studio</Link>
+        </div>
         <div className="stepper">
           {steps.map((s, i) => <button key={s} onClick={() => setStep(i)} className={`step ${step === i ? 'active' : ''}`}>{i + 1}. {s}</button>)}
         </div>

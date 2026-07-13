@@ -11,6 +11,7 @@ export default function HomePage() {
             <Link href="/builder">Create Site</Link>
             <Link href="/dashboard">Dashboard</Link>
             <Link href="/customer">Customer Login</Link>
+            <Link href="/video-studio">AI Video Studio</Link>
             <a href="#pricing">Subscriptions</a>
           </div>
         </nav>
@@ -22,6 +23,7 @@ export default function HomePage() {
             <div className="controls">
               <Link className="btn gold" href="/builder">Start Building</Link>
               <Link className="btn secondary" href="/customer">Customer Login</Link>
+              <Link className="btn secondary" href="/video-studio">AI Video Studio</Link>
             </div>
           </div>
           <div className="mock">
@@ -35,6 +37,7 @@ export default function HomePage() {
                 <div className="mock-tile">Build</div>
                 <div className="mock-tile">Subscribe</div>
                 <div className="mock-tile">Publish</div>
+                <div className="mock-tile">AI Video</div>
               </div>
             </div>
           </div>

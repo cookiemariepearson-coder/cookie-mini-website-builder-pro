@@ -1,15 +1,19 @@
-# Cookie AI Video Studio Demo Add-On — Build Fix
+# Cookie Mini Website Builder Pro — AI Video Studio Visible Link Update
 
-This fixes the Vercel build error from the first AI Video Studio add-on.
+This update makes the AI Video Studio visible inside the project instead of only existing as a direct `/video-studio` page.
 
-The issue was a TypeScript name conflict: the page imported `styles` from the CSS module, then also created a `const styles` array. This package renames the array to `styleOptions`.
+## Adds / fixes
+- Adds `/video-studio` page.
+- Adds AI Video Studio link to the main homepage navigation.
+- Adds AI Video Studio button in the builder sidebar.
+- Adds AI Video Studio card on the dashboard.
+- Adds AI Video Studio link/button in the customer dashboard.
 
 ## Upload steps
+1. Unzip this file.
+2. Upload the inside files/folders to GitHub.
+3. Commit changes.
+4. Wait for Vercel to show Ready.
+5. Test: https://www.cookiesdigitalcreations.com/video-studio
 
-1. Unzip this package.
-2. Open GitHub repo: `cookie-mini-website-builder-pro`.
-3. Click **Code → Add file → Upload files**.
-4. Upload the inside `app` folder and this README.
-5. Click **Commit changes**.
-6. Wait for Vercel to redeploy and show **Ready**.
-7. Test: `https://www.cookiesdigitalcreations.com/video-studio`.
+Note: this is still Demo Mode. It creates scripts, captions, and AI video prompts. Real AI video generation can be connected later through a paid video API.
