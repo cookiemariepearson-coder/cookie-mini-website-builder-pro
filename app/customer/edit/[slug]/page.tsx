@@ -31,7 +31,7 @@ function normalizeCheckoutUrl(rawUrl?: string) {
 }
 
 function normalizePlan(value: any): PlanKey {
-  return value === 'business' || value === 'premium' ? value : 'starter';
+  return value === 'free' || value === 'business' || value === 'premium' || value === 'starter' ? value : 'starter';
 }
 
 function isTemplateDefaultText(value: string, field: 'headline' | 'description') {
@@ -42,6 +42,7 @@ function isTemplateDefaultText(value: string, field: 'headline' | 'description')
 
 function friendlyPageLimit(plan: PlanKey) {
   const info = plans[plan];
+  if (plan === 'free') return 'Free Launch Page includes Home only. Upgrade to Starter, Business, or Premium to add more pages.';
   return info.allPages ? 'Premium includes all available pages.' : `${info.name} includes ${info.maxPages} page${info.maxPages > 1 ? 's' : ''}. Extra pages are $10/month per page.`;
 }
 
@@ -52,6 +53,9 @@ export default function CustomerEditSitePage({ params }: { params: { slug: strin
   const [saving, setSaving] = useState(false);
   const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'cookiesdigitalcreations.com';
   const extraPageCheckoutUrl = normalizeCheckoutUrl(process.env.NEXT_PUBLIC_EXTRA_PAGE_SUBSCRIPTION_CHECKOUT_URL);
+  const starterCheckoutUrl = normalizeCheckoutUrl(process.env.NEXT_PUBLIC_STARTER_SUBSCRIPTION_CHECKOUT_URL);
+  const businessCheckoutUrl = normalizeCheckoutUrl(process.env.NEXT_PUBLIC_BUSINESS_SUBSCRIPTION_CHECKOUT_URL);
+  const premiumCheckoutUrl = normalizeCheckoutUrl(process.env.NEXT_PUBLIC_PREMIUM_SUBSCRIPTION_CHECKOUT_URL);
 
   useEffect(() => {
     const savedEmail = localStorage.getItem('cookie-customer-email') || '';
@@ -127,7 +131,7 @@ export default function CustomerEditSitePage({ params }: { params: { slug: strin
   const planKey = useMemo<PlanKey>(() => normalizePlan(site?.plan), [site]);
   const planInfo = plans[planKey];
   const selectedPages = normalizePages(site?.pages || ['Home']);
-  const neededExtraPages = getExtraPageCount(planKey, selectedPages.length);
+  const neededExtraPages = planKey === 'free' ? 0 : getExtraPageCount(planKey, selectedPages.length);
   const alreadyPaidExtraPages = Number(site?.extra_page_count || 0);
   const additionalExtraPagesNeeded = Math.max(0, neededExtraPages - alreadyPaidExtraPages);
   const price = getPlanPrice(planKey, selectedPages.length);
@@ -137,7 +141,7 @@ export default function CustomerEditSitePage({ params }: { params: { slug: strin
 
   function buildPendingSite(pageOverride?: string[]) {
     const pagesToSave = normalizePages(pageOverride || selectedPages);
-    const pendingNeededExtraPages = getExtraPageCount(planKey, pagesToSave.length);
+    const pendingNeededExtraPages = planKey === 'free' ? 0 : getExtraPageCount(planKey, pagesToSave.length);
     const pendingPrice = getPlanPrice(planKey, pagesToSave.length);
     const pendingPriceLabel = getBillingLabel(planKey, pagesToSave.length);
     return {
@@ -182,6 +186,11 @@ export default function CustomerEditSitePage({ params }: { params: { slug: strin
     const nextPages = selected ? currentPages.filter((item: string) => item !== page) : normalizePages([...currentPages, page]);
     const nextNeededExtraPages = getExtraPageCount(planKey, nextPages.length);
     const extraNeeded = Math.max(0, nextNeededExtraPages - alreadyPaidExtraPages);
+
+    if (!selected && planKey === 'free') {
+      setMessage('Free Launch Page includes Home only. Choose a paid upgrade first to add more pages.');
+      return;
+    }
 
     if (!selected && extraNeeded > 0) {
       setMessage(`This adds ${extraNeeded} extra page${extraNeeded > 1 ? 's' : ''}. Extra pages are $10/month per page. Opening checkout now so this page can be unlocked.`);
@@ -229,10 +238,10 @@ export default function CustomerEditSitePage({ params }: { params: { slug: strin
         email: site.email || customerEmail,
         primaryColor: site.primaryColor || templates[(site.template || 'local') as TemplateKey]?.defaultPrimary || '#20172f',
         accentColor: site.accentColor || templates[(site.template || 'local') as TemplateKey]?.defaultAccent || '#c46a2d',
-        pages: selectedPages,
-        extra_page_count: Math.max(neededExtraPages, alreadyPaidExtraPages),
-        monthly_price: price,
-        price_label: priceLabel,
+        pages: planKey === 'free' ? ['Home'] : selectedPages,
+        extra_page_count: planKey === 'free' ? 0 : Math.max(neededExtraPages, alreadyPaidExtraPages),
+        monthly_price: planKey === 'free' ? 0 : price,
+        price_label: planKey === 'free' ? 'Free' : priceLabel,
         status: 'published'
       };
       const response = await fetch(`/api/customer/sites/${params.slug}?t=${Date.now()}`, {
@@ -309,24 +318,25 @@ export default function CustomerEditSitePage({ params }: { params: { slug: strin
 
         <section className="card">
           <h2>Pages / Sections</h2>
-          <p>{friendlyPageLimit(planKey)} If a selected page goes above the included limit, the builder opens the $10/month extra page checkout automatically.</p>
+          <p>{friendlyPageLimit(planKey)} {planKey === 'free' ? 'Use one of the upgrade buttons below to unlock more pages.' : 'If a selected page goes above the included limit, the builder opens the $10/month extra page checkout automatically.'}</p>
           <div className="pages-grid admin-pages">
             {pageOptions.map(page => {
               const selected = selectedPages.includes(page);
               const nextPages = selected ? selectedPages.filter(item => item !== page) : normalizePages([...selectedPages, page]);
-              const extraNeeded = Math.max(0, getExtraPageCount(planKey, nextPages.length) - alreadyPaidExtraPages);
+              const extraNeeded = planKey === 'free' && !selected && page !== 'Home' ? 1 : Math.max(0, getExtraPageCount(planKey, nextPages.length) - alreadyPaidExtraPages);
               return <button key={page} onClick={() => togglePage(page)} className={`option ${selected ? 'active' : ''}`} disabled={page === 'Home'}>
                 <strong>{page}</strong><br />
-                <span className="small">{page === 'Home' ? 'Required' : selected ? 'Selected — click to remove' : extraNeeded > 0 ? '+$10/mo extra page checkout' : 'Add page'}</span>
+                <span className="small">{page === 'Home' ? 'Required' : selected ? 'Selected — click to remove' : planKey === 'free' && page !== 'Home' && !selected ? 'Upgrade to unlock' : extraNeeded > 0 ? '+$10/mo extra page checkout' : 'Add page'}</span>
               </button>;
             })}
           </div>
-          {additionalExtraPagesNeeded > 0 && <div className="notice danger" style={{marginTop: 18}}>
+          {planKey === 'free' && <div className="notice" style={{marginTop: 18}}><strong>Free page active:</strong> Upgrade to unlock extra pages, remove the Cookie branding badge, and access paid templates.<div className="controls" style={{marginTop: 12}}>{starterCheckoutUrl && <a className="btn gold" href={starterCheckoutUrl}>Upgrade to Starter — $19/mo</a>}{businessCheckoutUrl && <a className="btn secondary" href={businessCheckoutUrl}>Upgrade to Business — $30/mo</a>}{premiumCheckoutUrl && <a className="btn secondary" href={premiumCheckoutUrl}>Upgrade to Premium — $50/mo</a>}</div></div>}
+          {additionalExtraPagesNeeded > 0 && planKey !== 'free' && <div className="notice danger" style={{marginTop: 18}}>
             <strong>Extra page checkout required:</strong> You selected {additionalExtraPagesNeeded} new extra page{additionalExtraPagesNeeded > 1 ? 's' : ''}. Extra pages are $10/month per page.
           </div>}
           <div className="controls">
-            <button className="btn gold" onClick={() => saveSite()} disabled={saving}>{saving ? 'Saving...' : additionalExtraPagesNeeded > 0 ? 'Checkout Extra Pages & Republish' : 'Save & Republish'}</button>
-            {extraPageCheckoutUrl && <button className="btn secondary" onClick={() => startExtraPageCheckout(selectedPages)}>Add Extra Page — $10/mo</button>}
+            <button className="btn gold" onClick={() => saveSite()} disabled={saving}>{saving ? 'Saving...' : additionalExtraPagesNeeded > 0 && planKey !== 'free' ? 'Checkout Extra Pages & Republish' : 'Save & Republish'}</button>
+            {planKey !== 'free' && extraPageCheckoutUrl && <button className="btn secondary" onClick={() => startExtraPageCheckout(selectedPages)}>Add Extra Page — $10/mo</button>}
             <button className="btn secondary" onClick={resetPages}>Reset Pages</button>
             <a className="btn secondary" href={direct} target="_blank" rel="noreferrer">Open Direct Link</a>
             <a className="btn secondary" href={subdomain} target="_blank" rel="noreferrer">Open Subdomain</a>
@@ -343,7 +353,7 @@ export default function CustomerEditSitePage({ params }: { params: { slug: strin
           </div>
           <button className="btn gold" onClick={() => saveSite()} disabled={saving}>{saving ? 'Saving...' : 'Save'}</button>
         </div>
-        <CustomerSiteView site={{...site, pages: selectedPages}} previewLabel="Live Editing Preview" />
+        <CustomerSiteView site={{...site, pages: planKey === 'free' ? ['Home'] : selectedPages, plan: planKey}} previewLabel="Live Editing Preview" />
       </aside>
     </div>}
   </main>;

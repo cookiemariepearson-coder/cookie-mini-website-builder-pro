@@ -31,7 +31,7 @@ const lengthOptions = ["15 seconds", "30 seconds", "45 seconds"];
 const musicOptions = ["Upbeat pop", "Luxury lounge", "Hip-hop bounce", "Clean corporate", "Island / tropical", "Emotional cinematic"];
 const voiceOptions = ["Warm female voice", "Bold sassy female voice", "Professional narrator", "High-energy creator", "Calm luxury voice"];
 
-const pages = ["Script", "Captions", "Shot List", "Video Prompt", "Voiceover", "Next Steps"] as const;
+const pages = ["Script", "Captions", "Shot List", "Storyboard", "Video Prompt", "Voiceover", "Next Steps"] as const;
 type OutputPage = (typeof pages)[number];
 
 type FormState = {
@@ -62,6 +62,15 @@ const starterForm: FormState = {
 
 function slug(text: string) {
   return text.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "my-business";
+}
+
+function escapeHtml(text: string) {
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
 }
 
 function buildKit(form: FormState, version: number) {
@@ -112,6 +121,14 @@ function buildKit(form: FormState, version: number) {
     `End screen: ${cta} with website/contact callout.`
   ];
 
+  const storyboard = [
+    { time: "Scene 1", title: "Hook", visual: `3D title card, floating shapes, and bold text: ${name}.`, overlay: hooks[versionIndex] },
+    { time: "Scene 2", title: "Need", visual: `Show ${audience} looking for a clear solution.`, overlay: `Made for ${audience}` },
+    { time: "Scene 3", title: "Offer", visual: `Feature ${offer} with close-ups, motion cards, and benefit labels.`, overlay: `Now offering: ${offer}` },
+    { time: "Scene 4", title: "Trust", visual: "Add icons for fast service, quality, convenience, reviews, or local support.", overlay: "Clear. Helpful. Easy to trust." },
+    { time: "Scene 5", title: "Call to Action", visual: `End card with website/contact information and ${name} branding.`, overlay: cta }
+  ];
+
   const captions = [
     `${name} is ready to help.`,
     `Need ${offer}? This is your sign.`,
@@ -125,7 +142,7 @@ function buildKit(form: FormState, version: number) {
   const title = `${name} ${form.videoType} Kit`;
   const site = `https://${slug(name)}.cookiesdigitalcreations.com`;
 
-  return { title, script, shotList, captions, prompt, voiceover, site };
+  return { title, script, shotList, storyboard, captions, prompt, voiceover, site };
 }
 
 export default function VideoStudioPage() {
@@ -133,6 +150,7 @@ export default function VideoStudioPage() {
   const [generated, setGenerated] = useState(false);
   const [version, setVersion] = useState(0);
   const [activePage, setActivePage] = useState<OutputPage>("Script");
+  const [downloadMessage, setDownloadMessage] = useState("");
 
   const kit = useMemo(() => buildKit(form, version), [form, version]);
 
@@ -163,24 +181,101 @@ export default function VideoStudioPage() {
       "SHOT LIST",
       kit.shotList.map((line, index) => `${index + 1}. ${line}`).join("\n"),
       "",
+      "STORYBOARD",
+      kit.storyboard.map((scene, index) => `${index + 1}. ${scene.title} — ${scene.visual} Overlay: ${scene.overlay}`).join("\n"),
+      "",
       "VOICEOVER",
       kit.voiceover,
       "",
       "AI VIDEO PROMPT",
       kit.prompt,
       "",
-      `Suggested website link: ${kit.site}`
+      `Suggested website link: ${kit.site}`,
+      "",
+      "NOTE",
+      "This is a creative video kit. It does not create an MP4 video until a paid AI video API is connected."
     ].join("\n");
   }
 
-  function downloadKit() {
-    const blob = new Blob([allKitText()], { type: "text/plain" });
+  function kitHtml() {
+    const scenes = kit.storyboard.map((scene, index) => `
+      <article class="scene">
+        <span>Scene ${index + 1}</span>
+        <h3>${escapeHtml(scene.title)}</h3>
+        <p><strong>Visual:</strong> ${escapeHtml(scene.visual)}</p>
+        <p><strong>Text overlay:</strong> ${escapeHtml(scene.overlay)}</p>
+      </article>
+    `).join("");
+
+    const script = kit.script.map((line) => `<li><strong>${escapeHtml(line.label)}:</strong> ${escapeHtml(line.text)}</li>`).join("");
+    const shots = kit.shotList.map((line) => `<li>${escapeHtml(line)}</li>`).join("");
+    const captions = escapeHtml(kit.captions).replace(/\n/g, "<br />");
+
+    return `<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>${escapeHtml(kit.title)}</title>
+  <style>
+    body{margin:0;font-family:Arial,sans-serif;background:#160d23;color:#1b1028;}
+    .wrap{max-width:980px;margin:0 auto;padding:34px;}
+    .hero{background:linear-gradient(135deg,#ffca77,#ff6ea8,#7247ff);color:#fff;border-radius:32px;padding:34px;box-shadow:0 24px 60px rgba(0,0,0,.3)}
+    .hero h1{font-size:42px;line-height:.98;margin:12px 0}.tag{letter-spacing:.14em;text-transform:uppercase;font-weight:900;color:#fff4d8}
+    section{background:#fff;border-radius:24px;padding:24px;margin:20px 0;box-shadow:0 18px 50px rgba(0,0,0,.22)}
+    h2{margin-top:0;font-size:28px}.scene{border:1px solid #eadcf7;border-radius:20px;padding:18px;margin:12px 0;background:linear-gradient(135deg,#fff8eb,#f4edff)}
+    .scene span{font-size:12px;letter-spacing:.12em;text-transform:uppercase;font-weight:900;color:#c46a2d}.box{white-space:pre-wrap;background:#110b1d;color:#fff7e8;border-radius:18px;padding:18px;line-height:1.55}
+    li{margin:10px 0}.note{border:2px dashed #c46a2d;background:#fff7ec}.footer{color:#fff;opacity:.8;text-align:center;padding:16px}
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <div class="hero">
+      <p class="tag">Cookie AI Video Studio</p>
+      <h1>${escapeHtml(kit.title)}</h1>
+      <p>Platform: ${escapeHtml(form.platform)} • Length: ${escapeHtml(form.length)} • Style: ${escapeHtml(form.vibe)} • Voice: ${escapeHtml(form.voice)}</p>
+    </div>
+    <section><h2>Script</h2><ul>${script}</ul></section>
+    <section><h2>Storyboard</h2>${scenes}</section>
+    <section><h2>Shot List</h2><ol>${shots}</ol></section>
+    <section><h2>Captions</h2><div class="box">${captions}</div></section>
+    <section><h2>Voiceover</h2><div class="box">${escapeHtml(kit.voiceover)}</div></section>
+    <section><h2>AI Video Prompt</h2><div class="box">${escapeHtml(kit.prompt)}</div></section>
+    <section class="note"><h2>Next step</h2><p>This download is the creative kit. To generate a real MP4 video, Cookie Digital Creations must connect a paid AI video API such as Runway, Luma, Replicate, or HeyGen.</p><p>Suggested website link: ${escapeHtml(kit.site)}</p></section>
+    <p class="footer">Generated by Cookie Mini Website Builder Pro</p>
+  </main>
+</body>
+</html>`;
+  }
+
+  function downloadFile(contents: string, filename: string, type: string) {
+    const blob = new Blob([contents], { type });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `${slug(form.businessName || "cookie-video-kit")}.txt`;
+    a.download = filename;
     a.click();
     URL.revokeObjectURL(url);
+    setDownloadMessage(`Downloaded ${filename}. Open it from your browser Downloads folder.`);
+  }
+
+  function downloadTextKit() {
+    downloadFile(allKitText(), `${slug(form.businessName || "cookie-video-kit")}.txt`, "text/plain");
+  }
+
+  function downloadKit() {
+    downloadFile(kitHtml(), `${slug(form.businessName || "cookie-video-kit")}-full-video-kit.html`, "text/html");
+  }
+
+  function openPrintableKit() {
+    const win = window.open("", "_blank");
+    if (!win) {
+      alert("Please allow pop-ups to open the printable kit.");
+      return;
+    }
+    win.document.open();
+    win.document.write(kitHtml());
+    win.document.close();
   }
 
   return (
@@ -275,7 +370,7 @@ export default function VideoStudioPage() {
               <p className={css.eyebrowDark}>Generated Video Kit</p>
               <h2>{generated ? kit.title : "Your kit will appear here"}</h2>
             </div>
-            {generated && <button className={css.secondary} onClick={downloadKit}>Download Kit</button>}
+            {generated && <button className={css.secondary} onClick={downloadKit}>Download Full Kit</button>}
           </div>
 
           {!generated ? (
@@ -285,6 +380,7 @@ export default function VideoStudioPage() {
             </div>
           ) : (
             <>
+              {downloadMessage && <p className={css.notice}>{downloadMessage}</p>}
               <div className={css.tabs}>
                 {pages.map((page) => (
                   <button key={page} className={activePage === page ? css.activeTab : ""} onClick={() => setActivePage(page)}>{page}</button>
@@ -322,6 +418,23 @@ export default function VideoStudioPage() {
                 </div>
               )}
 
+              {activePage === "Storyboard" && (
+                <div className={css.sectionBlock}>
+                  <h3>Storyboard Cards</h3>
+                  <div className={css.storyboardGrid}>
+                    {kit.storyboard.map((scene, index) => (
+                      <article className={css.storyCard} key={scene.title}>
+                        <span>Scene {index + 1}</span>
+                        <h4>{scene.title}</h4>
+                        <p><strong>Visual:</strong> {scene.visual}</p>
+                        <p><strong>Overlay:</strong> {scene.overlay}</p>
+                      </article>
+                    ))}
+                  </div>
+                  <button className={css.secondary} onClick={() => copyText(kit.storyboard.map((scene, index) => `${index + 1}. ${scene.title}: ${scene.visual} Overlay: ${scene.overlay}`).join("\n"))}>Copy Storyboard</button>
+                </div>
+              )}
+
               {activePage === "Video Prompt" && (
                 <div className={css.sectionBlock}>
                   <h3>AI Video Prompt</h3>
@@ -344,14 +457,16 @@ export default function VideoStudioPage() {
                   <p>Use these buttons after generating the kit.</p>
                   <div className={css.actionGrid}>
                     <button onClick={() => copyText(allKitText())}>Copy Full Kit</button>
-                    <button onClick={downloadKit}>Download Text Kit</button>
+                    <button onClick={downloadKit}>Download Full HTML Kit</button>
+                    <button onClick={downloadTextKit}>Download Text Kit</button>
+                    <button onClick={openPrintableKit}>Open Printable Kit</button>
                     <a href="/builder">Back to Website Builder</a>
                     <a href="/customer">Open Customer Dashboard</a>
                   </div>
                   <div className={css.lockedVideoBox}>
                     <strong>Real AI video generation coming later</strong>
                     <p>
-                      This demo creates all the creative pieces first. When you connect Runway, Luma, Replicate, or HeyGen later, this page can turn into a real video generator with monthly video credits by plan.
+                      This page now downloads a full creative video kit, not an MP4 video. Real video generation can be connected later through Runway, Luma, Replicate, or HeyGen with monthly Cookie Credits by plan.
                     </p>
                   </div>
                 </div>

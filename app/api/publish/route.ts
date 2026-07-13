@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
-import { normalizePages } from '@/lib/templates';
+import { getBillingLabel, getPlanPrice, normalizePages, normalizePlanKey } from '@/lib/templates';
 
 function cleanRootDomain(value?: string | null) {
   const fallback = 'cookiesdigitalcreations.com';
@@ -21,39 +21,37 @@ export async function POST(request: Request) {
   const pathLink = `https://www.${rootDomain}/site/${slug}`;
   const supabase = getSupabaseAdmin();
 
-  if (!slug) {
-    return NextResponse.json({ ok: false, error: 'Missing customer website slug.' }, { status: 400 });
-  }
+  if (!slug) return NextResponse.json({ ok: false, error: 'Missing customer website slug.' }, { status: 400 });
 
-  // Demo mode: without Supabase env variables, the builder still shows what the live link will be.
-  if (!supabase) {
-    return NextResponse.json({ ok: true, demo: true, link, pathLink });
-  }
+  const plan = normalizePlanKey(payload.plan);
+  const pages = plan === 'free' ? ['Home'] : normalizePages(payload.pages);
+  const calculatedPrice = plan === 'free' ? 0 : getPlanPrice(plan, pages.length);
+  const priceLabel = plan === 'free' ? 'Free' : payload.priceLabel || getBillingLabel(plan, pages.length);
+
+  if (!supabase) return NextResponse.json({ ok: true, demo: true, link, pathLink });
 
   const record = {
     slug,
     business_name: payload.businessName,
     businessName: payload.businessName,
     template: payload.template,
-    plan: payload.plan,
+    plan,
     headline: payload.headline,
     description: payload.description,
     phone: payload.phone,
     email: payload.email,
     primaryColor: payload.primaryColor,
     accentColor: payload.accentColor,
-    pages: normalizePages(payload.pages),
-    billing: payload.billing || 'subscription',
-    extra_page_count: payload.extraPageCount || 0,
-    monthly_price: payload.price || null,
-    price_label: payload.priceLabel || null,
+    pages,
+    billing: plan === 'free' ? 'free' : 'subscription',
+    extra_page_count: plan === 'free' ? 0 : payload.extraPageCount || 0,
+    monthly_price: calculatedPrice,
+    price_label: priceLabel,
     status: 'published',
     updated_at: new Date().toISOString()
   };
 
   const { error } = await supabase.from('websites').upsert(record, { onConflict: 'slug' });
-  if (error) {
-    return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
-  }
+  if (error) return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
   return NextResponse.json({ ok: true, link, pathLink });
 }

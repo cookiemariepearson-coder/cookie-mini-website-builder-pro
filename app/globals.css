@@ -589,3 +589,82 @@ textarea { min-height: 88px; resize: vertical; }
   color: #6b6178;
 }
 .video-studio-callout .btn { width: 100%; justify-content: center; text-align: center; }
+
+/* Free plan + pricing upgrade */
+.section-lead {
+  max-width: 880px;
+  color: #6d6378;
+  line-height: 1.75;
+  font-size: 1.04rem;
+}
+.cards4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.pricing-grid { align-items: stretch; }
+.pricing-card {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(32,23,47,.12);
+  box-shadow: 0 24px 60px rgba(32,23,47,.08);
+}
+.pricing-card:before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(circle at top right, rgba(245,158,11,.18), transparent 34%);
+}
+.featured-plan {
+  border-color: rgba(196,106,45,.42);
+  transform: translateY(-8px);
+  box-shadow: 0 34px 80px rgba(196,106,45,.18);
+}
+.freemium-hero {
+  background:
+    radial-gradient(circle at 75% 12%, rgba(245,158,11,.16), transparent 26%),
+    radial-gradient(circle at 25% 92%, rgba(168,85,247,.13), transparent 30%);
+}
+.freemium-mock .mock-inner {
+  background:
+    linear-gradient(135deg, rgba(32,23,47,.95), rgba(196,106,45,.82)),
+    radial-gradient(circle at top right, rgba(255,255,255,.28), transparent 32%);
+  color: white;
+}
+.locked-option {
+  opacity: .72;
+  border-style: dashed !important;
+}
+.success-notice {
+  background: #f0fff4 !important;
+  border-color: rgba(34,197,94,.25) !important;
+}
+.free-site-preview .site-footer {
+  padding-bottom: 24px;
+}
+.free-branding-badge {
+  margin: 14px auto 0;
+  width: fit-content;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.12);
+  border: 1px solid rgba(255,255,255,.2);
+  color: rgba(255,255,255,.88);
+  font-size: .82rem;
+}
+.free-site-preview .site-header:after {
+  content: 'Free Launch Page';
+  margin-left: auto;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.12);
+  color: rgba(255,255,255,.92);
+  font-weight: 900;
+  font-size: .78rem;
+}
+@media (max-width: 1100px) {
+  .cards4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .featured-plan { transform: none; }
+}
+@media (max-width: 720px) {
+  .cards4 { grid-template-columns: 1fr; }
+}

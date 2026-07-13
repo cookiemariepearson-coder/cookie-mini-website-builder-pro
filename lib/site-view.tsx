@@ -5,7 +5,9 @@ import {
   templateThemeClasses,
   templates,
   type TemplateKey,
-  normalizePages
+  normalizePages,
+  normalizePlanKey,
+  plans
 } from './templates';
 
 type SiteViewProps = {
@@ -20,6 +22,7 @@ type SiteViewProps = {
   phone?: string;
   email?: string;
   previewLabel?: string;
+  plan?: string;
 };
 
 function safeTemplate(value: any): TemplateKey {
@@ -35,6 +38,8 @@ export function CustomerSiteView(props: SiteViewProps) {
   const templateKey = safeTemplate(props.template ?? source.template);
   const template = templates[templateKey];
   const pages = normalizePages(props.pages ?? source.pages ?? ['Home']);
+  const planKey = normalizePlanKey(props.plan ?? source.plan);
+  const isFree = planKey === 'free';
   const businessName = valueOrDefault(props.businessName ?? source.businessName ?? source.business_name, 'My Business Name');
   const headline = valueOrDefault(props.headline ?? source.headline, template.headline);
   const description = valueOrDefault(props.description ?? source.description, template.description);
@@ -46,7 +51,7 @@ export function CustomerSiteView(props: SiteViewProps) {
   const contactHref = email ? `mailto:${email}` : '#contact';
   const navPages = pages.includes('Contact') ? pages : [...pages, 'Contact'];
 
-  return <div className={`site-preview published-site ${themeClass}`} style={{marginTop: 18, textAlign: 'left'} as any}>
+  return <div className={`site-preview published-site ${themeClass} ${isFree ? 'free-site-preview' : ''}`} style={{marginTop: 18, textAlign: 'left'} as any}>
     <header className="site-header" style={{background: primaryColor, color: 'white'}}>
       <a href="#home" className="site-brand-link"><strong>{businessName}</strong></a>
       <nav className="site-top-links" aria-label="Website navigation">
@@ -57,25 +62,19 @@ export function CustomerSiteView(props: SiteViewProps) {
     <section id="home" className="site-hero" style={{background: `linear-gradient(135deg, ${primaryColor}, ${accentColor})`, color: 'white'}}>
       <div className="hero-content-block">
         <div className="hero-kicker">{props.previewLabel || templateAccentWords[templateKey]}</div>
-        <span className="badge" style={{color: primaryColor}}>{template.name}</span>
+        <span className="badge" style={{color: primaryColor}}>{isFree ? 'Free Launch Page' : template.name}</span>
         <h1>{headline}</h1>
         <p className="hero-description" style={{color:'rgba(255,255,255,.92)'}}>{description}</p>
         <div className="hero-actions">
           <a className="btn gold" href={contactHref}>Contact Now</a>
         </div>
       </div>
-      <div className={`template-art-card art-scene art-${templateKey}`} aria-label={`${template.name} artwork`}>
+      <div className="template-art-card" aria-label={`${template.name} artwork`}>
         <div className="template-art-glow" />
-        <div className="art-orbit orbit-one" />
-        <div className="art-orbit orbit-two" />
-        <div className="art-stack-3d">
-          <div className="art-layer art-layer-back"><span>{template.art.icon}</span></div>
-          <div className="art-layer art-layer-mid"><i /> <i /> <i /></div>
-          <div className="art-layer art-layer-front"><b>{template.art.icon}</b></div>
-        </div>
+        <div className="template-art-icon">{template.art.icon}</div>
         <strong>{template.art.label}</strong>
         <span>{template.art.details}</span>
-        <div className="art-chip-row"><em /> <em /> <em /></div>
+        <div className="template-art-lines"><i /><i /><i /></div>
       </div>
     </section>
 
@@ -114,6 +113,9 @@ export function CustomerSiteView(props: SiteViewProps) {
       </div>
     </section>}
 
-    <footer className="site-footer"><strong>{businessName}</strong>{email ? <><br /><a href={`mailto:${email}`}>{email}</a></> : null}</footer>
+    <footer className="site-footer">
+      <strong>{businessName}</strong>{email ? <><br /><a href={`mailto:${email}`}>{email}</a></> : null}
+      {isFree && <div className="free-branding-badge">Built with Cookie Mini Website Builder • Upgrade to remove this badge</div>}
+    </footer>
   </div>;
 }

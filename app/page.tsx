@@ -1,6 +1,8 @@
 import Link from 'next/link';
 import { plans, EXTRA_PAGE_PRICE } from '@/lib/templates';
 
+const pricingOrder = ['free', 'starter', 'business', 'premium'] as const;
+
 export default function HomePage() {
   return (
     <main>
@@ -9,65 +11,87 @@ export default function HomePage() {
           <div className="brand"><span className="logo">C</span> Cookie Mini Website Builder</div>
           <div className="navlinks">
             <Link href="/builder">Create Site</Link>
-            <Link href="/dashboard">Dashboard</Link>
+            <Link href="/pricing">Pricing</Link>
             <Link href="/customer">Customer Login</Link>
             <Link href="/video-studio">AI Video Studio</Link>
-            <a href="#pricing">Subscriptions</a>
           </div>
         </nav>
-        <section className="hero">
+
+        <section className="hero split-hero freemium-hero">
           <div>
-            <span className="badge">Advanced multi-customer website platform</span>
-            <h1>Let customers build, subscribe, and publish websites on your domain.</h1>
-            <p>Customers can create a website, go to subscription checkout, pay for the plan they selected, and receive a live link like <strong>customername.cookiesdigitalcreations.com</strong>. You can also build websites for customers yourself.</p>
+            <span className="badge">Free launch page + paid subscriptions</span>
+            <h1>Build a business website first. Upgrade when they need more.</h1>
+            <p>Cookie Mini Website Builder helps customers create a free launch page, upgrade to paid website subscriptions, add extra pages, and create AI promo video kits for their business.</p>
             <div className="controls">
-              <Link className="btn gold" href="/builder">Start Building</Link>
-              <Link className="btn secondary" href="/customer">Customer Login</Link>
-              <Link className="btn secondary" href="/video-studio">AI Video Studio</Link>
+              <Link className="btn gold" href="/builder">Start Free Launch Page</Link>
+              <Link className="btn secondary" href="#pricing">View Plans</Link>
+              <Link className="btn secondary" href="/video-studio">Try AI Video Studio</Link>
             </div>
           </div>
-          <div className="mock">
+          <div className="mock freemium-mock">
             <div className="mock-inner">
               <div className="mock-hero">
-                <strong>maryscleaning.cookiesdigitalcreations.com</strong>
-                <h3 style={{marginTop:16}}>Sparkling clean homes without the stress.</h3>
-                <p>Live website preview with pages, services, contact, checkout, and branded design.</p>
+                <strong>customername.cookiesdigitalcreations.com</strong>
+                <h3 style={{marginTop:16}}>Start free. Upgrade to unlock pages, templates, and credits.</h3>
+                <p>Free launch page • Monthly plans • Extra pages • Cookie Credits • AI Video Studio</p>
               </div>
               <div className="mock-row">
-                <div className="mock-tile">Build</div>
-                <div className="mock-tile">Subscribe</div>
-                <div className="mock-tile">Publish</div>
-                <div className="mock-tile">AI Video</div>
+                <div className="mock-tile">Free</div>
+                <div className="mock-tile">$19/mo</div>
+                <div className="mock-tile">$30/mo</div>
+                <div className="mock-tile">$50/mo</div>
               </div>
             </div>
           </div>
         </section>
       </div>
+
       <section className="section" id="pricing">
         <div className="container">
-          <h2>Subscription pricing that matches what the customer receives</h2>
-          <div className="grid cards3">
-            {Object.entries(plans).map(([key, plan]) => (
-              <div className="card" key={key}>
+          <span className="badge">Pricing</span>
+          <h2>Simple subscriptions with a free first page.</h2>
+          <p className="section-lead">Use the free plan to let people try the builder. Paid plans remove the free branding, unlock stronger pages, and include monthly Cookie Credits for AI tools.</p>
+          <div className="grid cards4 pricing-grid">
+            {pricingOrder.map((key) => {
+              const plan = plans[key];
+              return <div className={`card pricing-card ${key === 'business' ? 'featured-plan' : ''}`} key={key}>
+                {key === 'business' && <span className="badge">Best for small business</span>}
+                {key === 'free' && <span className="badge">Try it first</span>}
                 <h3>{plan.name}</h3>
                 <div className="price">{plan.priceLabel}</div>
                 <p>{plan.description}</p>
                 <ul className="list">
                   <li>{plan.limitLabel}</li>
-                  <li>Subscription checkout required before publishing</li>
-                  <li>Live customer subdomain link</li>
-                  <li>{plan.allPages ? 'All current page options unlocked' : `Extra pages are $${EXTRA_PAGE_PRICE}/month per page`}</li>
+                  <li>{plan.creditsLabel}</li>
+                  <li>{plan.branded ? 'Cookie branding included' : 'Professional paid website experience'}</li>
+                  <li>{plan.allPages ? 'All built-in page options unlocked' : key === 'free' ? 'Upgrade required for extra pages' : `Extra pages are $${EXTRA_PAGE_PRICE}/month per page`}</li>
+                  {plan.annualPrice > 0 && <li>Suggested annual option: {plan.annualLabel}</li>}
                 </ul>
-              </div>
-            ))}
+                <Link className="btn gold" href={`/builder?plan=${key}`}>{key === 'free' ? 'Start Free' : 'Choose Plan'}</Link>
+              </div>;
+            })}
+          </div>
+          <div className="notice" style={{marginTop: 18}}>
+            <strong>Cookie Credits:</strong> Credits are for AI tools such as AI Video Studio kits now and real AI video generation later. Website pages do not use credits.
           </div>
         </div>
       </section>
+
       <section className="section">
-        <div className="container card">
-          <h2>How customers use it</h2>
-          <p><strong>Choose Template</strong> → <strong>Content Next</strong> → <strong>Design Next</strong> → <strong>Sections / Pages Next</strong> → <strong>Preview & Checkout</strong> → <strong>Subscribe</strong> → <strong>Publish Website</strong>.</p>
-          <p>Starter is $19/month and best for one-page sites. Business is $30/month and includes up to 3 pages. Premium is $50/month and unlocks all available page and section options. Extra pages for Starter or Business are {`$${EXTRA_PAGE_PRICE}/month per page`}.</p>
+        <div className="container grid cards3">
+          <div className="card">
+            <h3>How it works</h3>
+            <p><strong>Choose Template</strong> → <strong>Content</strong> → <strong>Design</strong> → <strong>Pages</strong> → <strong>Publish Free</strong> or <strong>Checkout</strong>.</p>
+          </div>
+          <div className="card">
+            <h3>Extra pages</h3>
+            <p>Starter and Business customers can add pages at ${EXTRA_PAGE_PRICE}/month per page. Premium includes all available page and section options.</p>
+          </div>
+          <div className="card">
+            <h3>AI Video Studio</h3>
+            <p>Customers can create scripts, captions, storyboard notes, voiceover copy, and AI video prompts for promoting their website.</p>
+            <Link className="btn secondary" href="/video-studio">Open AI Video Studio</Link>
+          </div>
         </div>
       </section>
     </main>

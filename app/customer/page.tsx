@@ -106,7 +106,7 @@ export default function CustomerDashboardPage() {
       </div>
       <div className="controls">
         <button className="btn gold" onClick={() => loadSite()} disabled={loading}>{loading ? 'Loading...' : 'Open My Website Dashboard'}</button>
-        <Link className="btn secondary" href="/builder">Build a New Website</Link>
+        <Link className="btn secondary" href="/builder">Build a New Website</Link><Link className="btn secondary" href="/pricing">View Pricing</Link>
       </div>
       {message && <div className="notice" style={{marginTop: 14}}>{message}</div>}
     </section>
@@ -123,7 +123,7 @@ export default function CustomerDashboardPage() {
 
       <div className="admin-stats customer-stats">
         <div className="card mini-stat"><span>Plan</span><strong>{site.plan || 'starter'}</strong></div>
-        <div className="card mini-stat"><span>Monthly Price</span><strong>{site.price_label || money(site.monthly_price)}</strong></div>
+        <div className="card mini-stat"><span>Plan Price</span><strong>{site.plan === 'free' ? 'Free' : site.price_label || money(site.monthly_price)}</strong></div>
         <div className="card mini-stat"><span>Pages</span><strong>{Array.isArray(site.pages) ? site.pages.length : 1}</strong></div>
         <div className="card mini-stat"><span>Last Updated</span><strong>{site.updated_at ? new Date(site.updated_at).toLocaleDateString() : 'Saved'}</strong></div>
       </div>
@@ -142,7 +142,7 @@ export default function CustomerDashboardPage() {
 
       <div className="card" style={{boxShadow: 'none', marginTop: 18}}>
         <h3>Need more pages?</h3>
-        <p>Extra pages are $10/month per page. Use the add-on checkout button below to add pages automatically. Any issues, click the Contact Us button for help.</p>
+        <p>Extra pages are $10/month per page for Starter and Business customers. Use the add-on checkout button below to go directly to checkout. Any issues, click the Contact Us button for help.</p>
         <div className="controls" style={{marginTop: 12}}>
           {extraPageCheckoutUrl ? <a className="btn gold" href={extraPageCheckoutUrl}>Add Extra Page — $10/mo</a> : <div className="notice danger">Extra page checkout link is not connected yet. Add NEXT_PUBLIC_EXTRA_PAGE_SUBSCRIPTION_CHECKOUT_URL in Vercel.</div>}
           <a className="btn secondary" href="mailto:cookiepearson69@gmail.com?subject=Cookie%20Mini%20Website%20Builder%20Support">Contact Us</a>

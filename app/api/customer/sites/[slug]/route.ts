@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
-import { getBillingLabel, getExtraPageCount, getPlanPrice, normalizePages, type PlanKey } from '@/lib/templates';
+import { getBillingLabel, getExtraPageCount, getPlanPrice, normalizePages, normalizePlanKey, type PlanKey } from '@/lib/templates';
 
 export const dynamic = 'force-dynamic';
 
@@ -8,14 +8,10 @@ function normalizeEmail(value: string | null) {
   return String(value || '').trim().toLowerCase();
 }
 
-function normalizePlan(value: any): PlanKey {
-  return value === 'business' || value === 'premium' ? value : 'starter';
-}
-
 function publicSiteFields(site: any) {
-  const plan = normalizePlan(site.plan);
-  const pages = normalizePages(site.pages);
-  const extra_page_count = Number(site.extra_page_count || getExtraPageCount(plan, pages.length) || 0);
+  const plan = normalizePlanKey(site.plan);
+  const pages = plan === 'free' ? ['Home'] : normalizePages(site.pages);
+  const extra_page_count = plan === 'free' ? 0 : Number(site.extra_page_count || getExtraPageCount(plan, pages.length) || 0);
   return {
     id: site.id,
     slug: site.slug,
@@ -23,7 +19,7 @@ function publicSiteFields(site: any) {
     business_name: site.business_name || site.businessName || '',
     template: site.template || 'local',
     plan,
-    billing: site.billing || 'subscription',
+    billing: site.billing || (plan === 'free' ? 'free' : 'subscription'),
     status: site.status || 'published',
     headline: site.headline || '',
     description: site.description || '',
@@ -33,8 +29,8 @@ function publicSiteFields(site: any) {
     accentColor: site.accentColor || '#c46a2d',
     pages,
     extra_page_count,
-    monthly_price: site.monthly_price || getPlanPrice(plan, pages.length),
-    price_label: site.price_label || getBillingLabel(plan, pages.length),
+    monthly_price: plan === 'free' ? 0 : site.monthly_price || getPlanPrice(plan, pages.length),
+    price_label: plan === 'free' ? 'Free' : site.price_label || getBillingLabel(plan, pages.length),
     updated_at: site.updated_at,
     created_at: site.created_at
   };
@@ -42,27 +38,21 @@ function publicSiteFields(site: any) {
 
 function allowedCustomerUpdateFields(payload: any) {
   const update: Record<string, any> = {};
-  const fields = [
-    'businessName', 'business_name', 'headline', 'description', 'phone', 'email',
-    'primaryColor', 'accentColor', 'pages', 'template', 'extra_page_count', 'monthly_price', 'price_label'
-  ];
+  const fields = ['businessName', 'business_name', 'headline', 'description', 'phone', 'email', 'primaryColor', 'accentColor', 'pages', 'template', 'extra_page_count', 'monthly_price', 'price_label'];
 
-  for (const field of fields) {
-    if (field in payload) update[field] = payload[field];
-  }
-
+  for (const field of fields) if (field in payload) update[field] = payload[field];
   if ('businessName' in payload) update.business_name = payload.businessName;
   if ('business_name' in payload) update.businessName = payload.business_name;
 
-  const plan = normalizePlan(payload.plan || payload.currentPlan);
-  const pages = normalizePages(payload.pages);
+  const plan = normalizePlanKey(payload.currentPlan || payload.plan);
+  const pages = plan === 'free' ? ['Home'] : normalizePages(payload.pages);
   if ('pages' in payload) {
     update.pages = pages;
-    const calculatedExtraPages = getExtraPageCount(plan, pages.length);
+    const calculatedExtraPages = plan === 'free' ? 0 : getExtraPageCount(plan, pages.length);
     const paidExtraPages = Number(payload.extra_page_count || 0);
-    update.extra_page_count = Math.max(calculatedExtraPages, paidExtraPages);
-    update.monthly_price = payload.monthly_price || getPlanPrice(plan, pages.length);
-    update.price_label = payload.price_label || getBillingLabel(plan, pages.length);
+    update.extra_page_count = plan === 'free' ? 0 : Math.max(calculatedExtraPages, paidExtraPages);
+    update.monthly_price = plan === 'free' ? 0 : payload.monthly_price || getPlanPrice(plan, pages.length);
+    update.price_label = plan === 'free' ? 'Free' : payload.price_label || getBillingLabel(plan, pages.length);
   }
 
   update.status = 'published';
@@ -74,20 +64,12 @@ async function loadSiteForCustomer(slug: string, email: string) {
   const supabase = getSupabaseAdmin();
   if (!supabase) return { error: 'Supabase is not connected.', site: null };
 
-  const { data, error } = await supabase
-    .from('websites')
-    .select('*')
-    .eq('slug', slug)
-    .single();
-
+  const { data, error } = await supabase.from('websites').select('*').eq('slug', slug).single();
   if (error || !data) return { error: 'Website not found. Check the website name/subdomain.', site: null };
 
   const savedEmail = normalizeEmail(data.email);
   const incomingEmail = normalizeEmail(email);
-  if (!savedEmail || !incomingEmail || savedEmail !== incomingEmail) {
-    return { error: 'Email does not match this website record. Use the email entered when the website was created.', site: null };
-  }
-
+  if (!savedEmail || !incomingEmail || savedEmail !== incomingEmail) return { error: 'Email does not match this website record. Use the email entered when the website was created.', site: null };
   return { error: null, site: data };
 }
 
@@ -96,10 +78,7 @@ export async function GET(request: Request, { params }: { params: { slug: string
   const email = request.headers.get('x-customer-email') || url.searchParams.get('email') || '';
   const result = await loadSiteForCustomer(params.slug, email);
 
-  if (result.error || !result.site) {
-    return NextResponse.json({ ok: false, error: result.error || 'Website not found.' }, { status: 404 });
-  }
-
+  if (result.error || !result.site) return NextResponse.json({ ok: false, error: result.error || 'Website not found.' }, { status: 404 });
   return NextResponse.json({ ok: true, site: publicSiteFields(result.site) }, { headers: { 'Cache-Control': 'no-store' } });
 }
 
@@ -108,26 +87,14 @@ export async function PUT(request: Request, { params }: { params: { slug: string
   const email = request.headers.get('x-customer-email') || payload.customerEmail || payload.email || '';
   const result = await loadSiteForCustomer(params.slug, email);
 
-  if (result.error || !result.site) {
-    return NextResponse.json({ ok: false, error: result.error || 'Website not found.' }, { status: 404 });
-  }
-
+  if (result.error || !result.site) return NextResponse.json({ ok: false, error: result.error || 'Website not found.' }, { status: 404 });
   const supabase = getSupabaseAdmin();
   if (!supabase) return NextResponse.json({ ok: false, error: 'Supabase is not connected.' }, { status: 500 });
 
   const update = allowedCustomerUpdateFields({ ...payload, currentPlan: result.site.plan });
-  const { error } = await supabase
-    .from('websites')
-    .update(update)
-    .eq('slug', params.slug);
-
+  const { error } = await supabase.from('websites').update(update).eq('slug', params.slug);
   if (error) return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
 
-  const { data } = await supabase
-    .from('websites')
-    .select('*')
-    .eq('slug', params.slug)
-    .single();
-
+  const { data } = await supabase.from('websites').select('*').eq('slug', params.slug).single();
   return NextResponse.json({ ok: true, site: data ? publicSiteFields(data) : null }, { headers: { 'Cache-Control': 'no-store' } });
 }

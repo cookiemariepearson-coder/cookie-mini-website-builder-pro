@@ -229,3 +229,46 @@
   .twoCol, .actionGrid, .quickActions { grid-template-columns: 1fr; }
   .outputHeader { display: grid; }
 }
+.notice {
+  margin: 0 0 14px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: #fff7ec;
+  border: 1px solid #f0c27d;
+  color: #5d320d;
+  font-weight: 800;
+}
+.storyboardGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.storyCard {
+  border-radius: 20px;
+  padding: 16px;
+  background:
+    radial-gradient(circle at 85% 12%, rgba(255, 110, 168, 0.22), transparent 4rem),
+    linear-gradient(135deg, #fff8eb, #f5eeff);
+  border: 1px solid #eadcf7;
+  box-shadow: 0 14px 30px rgba(26, 16, 40, 0.08);
+}
+.storyCard span {
+  color: #c46a2d;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.storyCard h4 {
+  margin: 8px 0;
+  font-size: 1.1rem;
+}
+.storyCard p {
+  margin: 8px 0 0;
+  color: #5f5071;
+  line-height: 1.45;
+}
+@media (max-width: 620px) {
+  .storyboardGrid { grid-template-columns: 1fr; }
+}
