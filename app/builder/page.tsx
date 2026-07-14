@@ -310,6 +310,7 @@ export default function BuilderPage() {
   }
 
   const steps = ['Choose Type & Look', 'Website Info', 'Design', 'Pages & Wording', plan === 'free' ? 'Preview & Publish Free' : 'Preview & Checkout'];
+  const planEntries = Object.entries(plans) as Array<[PlanKey, (typeof plans)[PlanKey]]>;
 
   return (
     <main className="builder-shell">
@@ -356,7 +357,7 @@ export default function BuilderPage() {
               ))}
             </div>
             <div className="field"><label>Plan</label><select value={plan} onChange={e => changePlan(e.target.value as PlanKey)}>
-              {Object.entries(plans).map(([key, p]) => <option value={key} key={key}>{p.name} - {p.priceLabel} / {p.limitLabel}</option>)}
+              {planEntries.map(([key, p]) => <option value={key} key={key}>{p.name} - {p.priceLabel} / {p.limitLabel}</option>)}
             </select></div>
             <div className="notice"><strong>Next:</strong> click <em>Website Info Next</em> and enter the customer’s business name, email, headline, description, offers, and page wording.</div>
           </div>

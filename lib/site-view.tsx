@@ -137,7 +137,7 @@ export function CustomerSiteView(props: SiteViewProps) {
     </section>
 
     {pages.filter(page => page !== 'Home' && page !== 'Services').map(page => {
-      const copy = pageContent[page] || pageCopy[page] || { title: page, body: 'This page can be customized with customer-specific content.' };
+      const copy = (pageContent[page] || pageCopy[page] || { title: page, body: 'This page can be customized with customer-specific content.', media: [] }) as { title: string; body: string; media?: PageMediaItem[] };
       return <section className="site-section extra-content-section" id={sectionId(page)} key={page}>
         <div className="section-eyebrow">{page}</div>
         <h2>{copy.title}</h2>
