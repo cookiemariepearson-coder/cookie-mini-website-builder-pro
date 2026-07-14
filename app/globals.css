@@ -741,3 +741,71 @@ textarea { min-height: 88px; resize: vertical; }
 .published-site .template-art-card span {
   text-align: center;
 }
+
+/* Purpose-based template library upgrade */
+.purpose-sidebar { width: 410px; }
+.builder-shell { grid-template-columns: 410px 1fr; }
+.purpose-grid { display:grid; grid-template-columns: 1fr; gap:10px; max-height: 380px; overflow:auto; padding-right:4px; }
+.purpose-option { text-align:left; }
+.rich-template-grid { grid-template-columns: 1fr; }
+.rich-template-option { display:grid; grid-template-columns: 70px 1fr; gap:12px; align-items:center; text-align:left; }
+.template-thumb { width:64px; height:64px; border-radius:18px; overflow:hidden; display:block; box-shadow:0 12px 28px rgba(32,23,47,.16); background:#fff; }
+.template-thumb img, .selected-template-card img { width:100%; height:100%; object-fit:cover; display:block; }
+.selected-template-card { display:grid; grid-template-columns:74px 1fr; gap:12px; align-items:center; padding:12px; border:1px solid var(--line); border-radius:22px; background:#fff; margin:14px 0; }
+.selected-template-card img { width:74px; height:74px; border-radius:18px; box-shadow:0 12px 26px rgba(32,23,47,.16); }
+.template-purpose-pill { display:inline-flex; width:fit-content; margin:0 0 12px; padding:8px 11px; border-radius:999px; background:rgba(255,255,255,.18); border:1px solid rgba(255,255,255,.25); font-weight:950; font-size:12px; letter-spacing:.02em; }
+.rich-art-card { min-height: 340px; isolation:isolate; }
+.template-visual-image { width:min(260px, 88%); max-height:240px; object-fit:contain; border-radius:34px; position:relative; z-index:2; filter: drop-shadow(0 28px 36px rgba(0,0,0,.28)); transform: perspective(900px) rotateY(-9deg) rotateX(4deg); transition: transform .2s ease; }
+.rich-art-card:hover .template-visual-image { transform: perspective(900px) rotateY(-4deg) rotateX(2deg) translateY(-4px); }
+.rich-art-card strong, .rich-art-card span { position:relative; z-index:3; }
+.art-chip-row { display:flex; gap:8px; position:relative; z-index:3; }
+.art-chip-row em { width:34px; height:8px; border-radius:999px; background:rgba(255,255,255,.55); display:block; }
+.visual-gallery-strip { display:grid; grid-template-columns: 1.2fr 1fr 1fr; gap:12px; margin-top:18px; }
+.visual-gallery-strip img, .visual-gallery-strip div { min-height: 140px; border-radius:24px; border:1px solid var(--line); background:linear-gradient(135deg, color-mix(in srgb, var(--accent) 25%, white), color-mix(in srgb, var(--primary) 25%, white)); object-fit:cover; width:100%; }
+
+.template-purpose .site-section { position:relative; overflow:hidden; }
+.template-purpose .site-section:before { content:''; position:absolute; right:-80px; top:-80px; width:180px; height:180px; border-radius:999px; background:color-mix(in srgb, var(--accent) 10%, transparent); pointer-events:none; }
+.template-purpose .service-card { position:relative; overflow:hidden; }
+.template-purpose .service-card:after { content:''; position:absolute; right:-36px; bottom:-42px; width:96px; height:96px; border-radius:999px; background:color-mix(in srgb, var(--accent) 14%, transparent); }
+
+.style-3d .site-preview, .style-3d .service-card, .style-3d .template-art-card { box-shadow: 0 28px 80px rgba(0,0,0,.18); }
+.style-3d .service-card { transform: translateY(0); border-bottom: 7px solid color-mix(in srgb, var(--accent) 70%, #fff); }
+.style-realistic .site-preview { border-radius: 18px; }
+.style-realistic .template-art-card { border-radius: 24px; background: rgba(255,255,255,.16); }
+.style-cartoon .site-preview { border-radius: 42px; }
+.style-cartoon .site-hero { background-image: radial-gradient(circle at 18% 22%, rgba(255,255,255,.18) 0 8px, transparent 9px), radial-gradient(circle at 82% 78%, rgba(255,255,255,.14) 0 10px, transparent 11px) !important; }
+.style-cartoon .service-card { border-radius: 30px; transform: rotate(-.3deg); }
+.style-cartoon .service-card:nth-child(2) { transform: rotate(.5deg); }
+.style-floral .site-hero { border-radius:0 0 80px 80px; }
+.style-floral .template-art-card { border-radius:70px 28px 70px 28px; }
+.style-floral .site-section { background:linear-gradient(180deg, #fff, color-mix(in srgb, var(--accent) 5%, #fff)); }
+.style-luxury .site-preview { background:#111; color:#fff; }
+.style-luxury .site-section { background:#161616; border-color:rgba(255,255,255,.12); }
+.style-luxury p, .style-luxury .small { color:rgba(255,255,255,.72); }
+.style-luxury .service-card, .style-luxury .contact-panel { background:#202020; border-color:color-mix(in srgb, var(--accent) 38%, rgba(255,255,255,.1)); color:#fff; }
+.style-bold .site-hero { background-image: linear-gradient(45deg, rgba(255,255,255,.12) 25%, transparent 25%, transparent 50%, rgba(255,255,255,.12) 50%, rgba(255,255,255,.12) 75%, transparent 75%, transparent) !important; background-size: 46px 46px !important; }
+.style-warm .site-preview { border-radius:36px; }
+.style-warm .site-section { background:#fffaf3; }
+.style-minimal .site-preview { box-shadow:none; border-radius:14px; }
+.style-minimal .site-hero, .style-minimal .site-section { padding-left:clamp(28px,6vw,72px); padding-right:clamp(28px,6vw,72px); }
+.style-cinematic .site-preview { background:#0b0b13; color:white; }
+.style-cinematic .site-header, .style-cinematic .site-footer { background:#05050a!important; }
+.style-cinematic .site-section { background:#11111c; border-color:rgba(255,255,255,.12); }
+.style-cinematic p, .style-cinematic .small { color:rgba(255,255,255,.72); }
+.style-cinematic .service-card { background:#1b1b2b; border-color:rgba(168,85,247,.34); color:white; }
+
+.template-food .service-grid, .template-cleaning .service-grid, .template-shop .service-grid { grid-template-columns: repeat(3, minmax(0,1fr)); }
+.template-beauty .service-card { border-radius:34px; }
+.template-realestate .service-card { border-left:8px solid var(--accent); border-radius:10px; }
+.template-nonprofit .service-grid { grid-template-columns:1fr; }
+.template-portfolio .site-hero { min-height: 520px; align-items:end; }
+.template-kids .service-card { border:2px solid color-mix(in srgb, var(--accent) 45%, #fff); }
+
+@media (max-width: 980px) {
+  .builder-shell { grid-template-columns:1fr; }
+  .purpose-sidebar { width:auto; }
+  .purpose-grid { max-height:none; }
+  .rich-template-option { grid-template-columns:56px 1fr; }
+  .template-thumb { width:52px; height:52px; }
+  .visual-gallery-strip { grid-template-columns:1fr; }
+}

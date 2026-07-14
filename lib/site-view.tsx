@@ -6,6 +6,7 @@ import {
   normalizeServiceCards,
   pageCopy,
   sectionId,
+  safeTemplateKey,
   templateThemeClasses,
   templates,
   type TemplateKey
@@ -29,12 +30,8 @@ type SiteViewProps = {
   offerTitle?: string;
 };
 
-function safeTemplate(value: any): TemplateKey {
-  return value && templates[value as TemplateKey] ? value as TemplateKey : 'local';
-}
-
 function valueOrDefault(value: any, fallback: string) {
-  return value === undefined || value === null ? fallback : String(value);
+  return value === undefined || value === null || String(value).trim() === '' ? fallback : String(value);
 }
 
 function parsePageContent(value: any) {
@@ -50,7 +47,7 @@ function parsePageContent(value: any) {
 
 export function CustomerSiteView(props: SiteViewProps) {
   const source = props.site || props;
-  const templateKey = safeTemplate(props.template ?? source.template);
+  const templateKey = safeTemplateKey(props.template ?? source.template);
   const template = templates[templateKey];
   const pages = normalizePages(props.pages ?? source.pages ?? ['Home']);
   const planKey = normalizePlanKey(props.plan ?? source.plan);
@@ -62,7 +59,7 @@ export function CustomerSiteView(props: SiteViewProps) {
   const accentColor = valueOrDefault(props.accentColor ?? source.accentColor, template.defaultAccent || '#c46a2d');
   const phone = valueOrDefault(props.phone ?? source.phone, '');
   const email = valueOrDefault(props.email ?? source.email, '');
-  const themeClass = templateThemeClasses[templateKey];
+  const themeClass = templateThemeClasses[templateKey] || 'template-purpose';
   const contactHref = email ? `mailto:${email}` : '#contact';
   const navPages = pages.includes('Contact') ? pages : [...pages, 'Contact'];
   const rawPageContent = parsePageContent(props.pageContent ?? source.pageContent ?? source.page_content);
@@ -94,29 +91,24 @@ export function CustomerSiteView(props: SiteViewProps) {
     <section id="home" className="site-hero" style={{background: `linear-gradient(135deg, ${primaryColor}, ${accentColor})`, color: 'white'}}>
       <div className="hero-content-block">
         {props.previewLabel && <div className="hero-kicker">{props.previewLabel}</div>}
+        <div className="template-purpose-pill">{template.categoryName} • {template.styleName}</div>
         <h1>{headline}</h1>
         <p className="hero-description" style={{color:'rgba(255,255,255,.92)'}}>{description}</p>
         <div className="hero-actions">
           <a className="btn gold" href={contactHref}>Contact Now</a>
         </div>
       </div>
-      <div className="template-art-card art-scene" aria-label="Website artwork">
+      <div className="template-art-card rich-art-card" aria-label="Website artwork">
         <div className="template-art-glow" />
-        <div className="art-stack-3d">
-          <div className="art-layer art-layer-back"><span>{template.art.icon}</span></div>
-          <div className="art-layer art-layer-mid"><i /><i /><i /></div>
-          <div className="art-layer art-layer-front"><b>{template.art.icon}</b></div>
-        </div>
+        <img className="template-visual-image" src={template.art.image} alt={template.art.alt} />
+        <div className="art-chip-row"><em /><em /><em /></div>
         <strong>{artTitle}</strong>
         <span>{artDetails}</span>
-        <div className="art-orbit orbit-one" />
-        <div className="art-orbit orbit-two" />
-        <div className="art-chip-row"><em /><em /><em /></div>
       </div>
     </section>
 
     <section id="services" className="site-section services-section">
-      <div className="section-eyebrow">Services</div>
+      <div className="section-eyebrow">What is offered</div>
       <h2>{serviceSectionTitle || defaultOfferTitle}</h2>
       {serviceSectionBody && <p className="section-intro">{serviceSectionBody}</p>}
       <div className="service-grid">
@@ -130,6 +122,7 @@ export function CustomerSiteView(props: SiteViewProps) {
         <div className="section-eyebrow">{page}</div>
         <h2>{copy.title}</h2>
         <p>{copy.body}</p>
+        {page === 'Gallery' && <div className="visual-gallery-strip"><img src={template.art.image} alt="" /><div /><div /></div>}
         {page === 'Contact' && <div className="contact-panel">
           <strong>{businessName}</strong>
           {email && <a href={`mailto:${email}`}>{email}</a>}

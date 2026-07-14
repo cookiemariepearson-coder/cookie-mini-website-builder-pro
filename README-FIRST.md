@@ -1,46 +1,25 @@
-# Cookie Mini Website Builder Pro — Live Site Renderer Fix
+# Purpose-Based Template Library Upgrade
 
-This fixes why the section edits looked like they were not working.
+This update changes the builder from generic template color swaps into a purpose-based website setup.
 
-The customer editor was saving the editable fields, but the public live website route `/site/[slug]` was still using an old hardcoded layout. That old layout ignored:
+## What changed
 
-- service/offer box edits
-- Services & Offers title edits
-- About, Services, Products, Gallery, Testimonials, Contact, and FAQ wording edits
-- 3D artwork card wording
-- the stronger accent color styling
-
-## What this package changes
-
-- Replaces `app/site/[slug]/page.tsx` so the live website renders through `CustomerSiteView`.
-- Keeps the section editor fields on `/customer/edit/[slug]`.
-- Keeps Supabase save/update routes for section content.
-- Keeps the 3D template/artwork and accent color changes.
-- Removes the old hardcoded "What We Offer" live-site output.
+- Customers choose the website type first.
+- Each type has richer visual styles, including food art, flowers, buildings, realistic-style art, cartoon-style art, 3D-style art, luxury styling, and more.
+- Each type loads different suggested sections/pages.
+- Each type loads different default offer boxes and wording prompts.
+- Customer dashboard no longer shows the backup/direct link; the backup link should stay mostly for admin/troubleshooting.
+- Accent color remains active.
+- Free/Starter/Business/Premium page limits stay the same.
 
 ## Upload steps
 
 1. Unzip this package.
-2. Go to GitHub → `cookie-mini-website-builder-pro`.
-3. Click `Code → Add file → Upload files`.
-4. Upload the inside files/folders.
-5. Click `Commit changes`.
-6. Wait for Vercel to redeploy and show `Ready`.
+2. Upload the inside files/folders to GitHub.
+3. Commit changes.
+4. Wait for Vercel to redeploy and show Ready.
+5. Test: https://www.cookiesdigitalcreations.com/builder
 
-## Supabase step
+## Supabase
 
-Run this SQL again if you are unsure it was run already. It is safe to run again:
-
-`supabase/customer_content_fields_migration.sql`
-
-## Test steps
-
-1. Open `https://www.cookiesdigitalcreations.com/customer`.
-2. Load the test website.
-3. Click `Edit Website Details`.
-4. Change one offer box title and description.
-5. Change the About wording.
-6. Change the accent color.
-7. Click `Save & Republish`.
-8. Open the direct link and subdomain link.
-9. Hard refresh the live site if needed.
+No new Supabase migration is required for this update. It uses the existing template, pages, service_cards, page_content, colors, and published website fields.

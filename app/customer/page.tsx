@@ -68,7 +68,7 @@ export default function CustomerDashboardPage() {
       setSlug(clean);
       localStorage.setItem('cookie-customer-email', customerEmail);
       localStorage.setItem('cookie-customer-slug', clean);
-      setMessage('Website loaded. You can open it, edit it, republish it, or add extra pages through checkout.');
+      setMessage('Website loaded. You can open it, edit it, republish changes, or add extra pages through checkout.');
     } catch (error: any) {
       setSite(null);
       setMessage(error.message || 'Could not load your website.');
@@ -134,7 +134,6 @@ export default function CustomerDashboardPage() {
 
       <div className="controls">
         <a className="btn gold" href={links.subdomain} target="_blank" rel="noreferrer">Open Live Website</a>
-        <a className="btn secondary" href={links.direct} target="_blank" rel="noreferrer">Open Backup Direct Link</a>
         <Link className="btn secondary" href={`/customer/edit/${site.slug}`}>Edit Website Details</Link>
       </div>
 
