@@ -47,7 +47,7 @@ function normalizePlan(value: any): PlanKey {
 function isTemplateDefaultText(value: string, field: 'headline' | 'description') {
   const cleaned = String(value || '').trim();
   if (!cleaned) return true;
-  return Object.values(templates).some(template => template[field] === cleaned);
+  return (Object.values(templates) as any[]).some(template => template[field] === cleaned);
 }
 
 function friendlyPageLimit(plan: PlanKey) {
@@ -294,7 +294,7 @@ export default function CustomerEditSitePage({ params }: { params: { slug: strin
       const currentDescription = String(current?.description ?? '');
       const currentContent = buildAllPageContent(current.pageContent || current.page_content);
       const currentArt = getArtContent(current);
-      const artIsDefault = Object.values(templates).some(item => item.art.label === currentArt.title || item.art.details === currentArt.details);
+      const artIsDefault = (Object.values(templates) as any[]).some(item => item.art?.label === currentArt.title || item.art?.details === currentArt.details);
       currentContent._art = artIsDefault || !currentArt.title ? { title: template.art.label, details: template.art.details } : currentArt;
       return {
         ...current,
