@@ -14,10 +14,14 @@ import {
   pageOptions,
   plans,
   templates,
+  templateCatalog,
+  templateCategories,
+  safeTemplateKey,
   type PageContentMap,
   type PlanKey,
   type ServiceCard,
-  type TemplateKey
+  type TemplateKey,
+  type TemplateCategoryKey
 } from '@/lib/templates';
 import { CustomerSiteView } from '@/lib/site-view';
 
@@ -82,7 +86,7 @@ function buildAllPageContent(value: any): PageContentMap & { _art?: { title?: st
 
 function getArtContent(site: any) {
   const raw = getRawContent(site?.pageContent || site?.page_content);
-  const templateKey = templates[site?.template as TemplateKey] ? site.template as TemplateKey : 'local';
+  const templateKey = safeTemplateKey(site?.template);
   return {
     title: String(raw?._art?.title || templates[templateKey].art.label || ''),
     details: String(raw?._art?.details || templates[templateKey].art.details || '')
@@ -131,7 +135,7 @@ export default function CustomerEditSitePage({ params }: { params: { slug: strin
       const data = await response.json();
       if (!response.ok || !data.ok) throw new Error(data.error || 'Could not load site.');
       const loaded = data.site;
-      const templateKey = templates[loaded.template as TemplateKey] ? loaded.template as TemplateKey : 'local';
+      const templateKey = safeTemplateKey(loaded.template);
       const pages = normalizePages(loaded.pages);
       const serviceCards = cloneServiceCards(normalizeServiceCards(loaded.serviceCards || loaded.service_cards, templateKey));
       const pageContent = buildAllPageContent(loaded.pageContent || loaded.page_content);
@@ -206,7 +210,8 @@ export default function CustomerEditSitePage({ params }: { params: { slug: strin
   }
 
   function applyTemplate(nextTemplate: TemplateKey) {
-    const template = templates[nextTemplate];
+    const safeKey = safeTemplateKey(nextTemplate);
+    const template = templates[safeKey];
     setSite((current: any) => {
       if (!current) return current;
       const currentHeadline = String(current?.headline ?? '');
@@ -217,21 +222,29 @@ export default function CustomerEditSitePage({ params }: { params: { slug: strin
       currentContent._art = artIsDefault || !currentArt.title ? { title: template.art.label, details: template.art.details } : currentArt;
       return {
         ...current,
-        template: nextTemplate,
+        template: safeKey,
         primaryColor: template.defaultPrimary,
         accentColor: template.defaultAccent,
         headline: isTemplateDefaultText(currentHeadline, 'headline') ? template.headline : currentHeadline,
         description: isTemplateDefaultText(currentDescription, 'description') ? template.description : currentDescription,
-        serviceCards: cloneServiceCards(normalizeServiceCards(current.serviceCards || current.service_cards, nextTemplate)),
+        serviceCards: cloneServiceCards(normalizeServiceCards(current.serviceCards || current.service_cards, safeKey)),
         pageContent: currentContent
       };
     });
     setMessage(`Template changed to ${template.name}. The preview changed immediately. Click Save & Republish to update the live website.`);
   }
 
+  function changePurpose(nextPurpose: TemplateCategoryKey) {
+    const first = templateCatalog.find(item => item.category === nextPurpose);
+    if (first) applyTemplate(first.key);
+  }
+
   const planKey = useMemo<PlanKey>(() => normalizePlan(site?.plan), [site]);
   const planInfo = plans[planKey];
   const selectedPages = normalizePages(site?.pages || ['Home']);
+  const currentTemplateKey = safeTemplateKey(site?.template);
+  const currentPurpose = templates[currentTemplateKey].category;
+  const visibleTemplates = templateCatalog.filter(item => item.category === currentPurpose);
   const visiblePageContent: any = useMemo(() => buildAllPageContent(site?.pageContent || site?.page_content), [site?.pageContent, site?.page_content]);
   const visibleServiceCards = useMemo(() => cloneServiceCards(normalizeServiceCards(site?.serviceCards || site?.service_cards, site?.template || 'local')), [site?.serviceCards, site?.service_cards, site?.template]);
   const neededExtraPages = planKey === 'free' ? 0 : getExtraPageCount(planKey, selectedPages.length);
@@ -360,7 +373,7 @@ export default function CustomerEditSitePage({ params }: { params: { slug: strin
       const data = await response.json();
       if (!response.ok || !data.ok) throw new Error(data.error || 'Could not save site.');
       const savedSite = data.site || payload;
-      const savedTemplate = templates[savedSite.template as TemplateKey] ? savedSite.template as TemplateKey : 'local';
+      const savedTemplate = safeTemplateKey(savedSite.template);
       setSite({
         ...savedSite,
         businessName: savedSite.businessName || savedSite.business_name || payload.businessName,
@@ -434,13 +447,19 @@ export default function CustomerEditSitePage({ params }: { params: { slug: strin
         </section>
 
         <section className="card">
-          <h2>Design</h2>
-          <p className="small">Templates change layout, 3D-style artwork, colors, and the visual style. Colors preview immediately.</p>
-          <div className="field"><label>Template</label><select value={site.template || 'local'} onChange={e => applyTemplate(e.target.value as TemplateKey)}>{(Object.entries(templates) as Array<[TemplateKey, any]>).map(([key, item]) => <option value={key} key={key}>{item.name}</option>)}</select></div>
-          <div className="template-mini-grid">
-            {(Object.entries(templates) as Array<[TemplateKey, any]>).map(([key, item]) => <button type="button" key={key} onClick={() => applyTemplate(key)} className={`template-mini ${site.template === key ? 'active' : ''}`}>
-              <span style={{background: `linear-gradient(135deg, ${item.defaultPrimary}, ${item.defaultAccent})`}}>{item.art.icon}</span>
-              <strong>{item.name}</strong>
+          <h2>Design / Template Look</h2>
+          <p className="small">Choose the website type first, then click the visual style/design. The preview changes immediately.</p>
+          <div className="field"><label>Website Type</label><select value={currentPurpose} onChange={e => changePurpose(e.target.value as TemplateCategoryKey)}>
+            {templateCategories.map(item => <option key={item.key} value={item.key}>{item.name}</option>)}
+          </select></div>
+          <div className="visual-style-gallery customer-style-gallery">
+            {visibleTemplates.map(item => <button type="button" key={item.key} onClick={() => applyTemplate(item.key)} className={`visual-style-card ${currentTemplateKey === item.key ? 'active' : ''}`}>
+              <span className="visual-style-image"><img src={item.art.image} alt="" /></span>
+              <span className="visual-style-meta">
+                <strong>{item.styleName}</strong>
+                <small>{item.name}</small>
+                <em style={{background: `linear-gradient(135deg, ${item.defaultPrimary}, ${item.defaultAccent})`}} />
+              </span>
             </button>)}
           </div>
           <div className="field"><label>Main Color</label><input type="color" value={site.primaryColor || '#20172f'} onChange={e => update('primaryColor', e.target.value)} /></div>
@@ -489,8 +508,7 @@ export default function CustomerEditSitePage({ params }: { params: { slug: strin
             {planKey !== 'free' && extraPageCheckoutUrl && <button className="btn secondary" onClick={() => startExtraPageCheckout(selectedPages)}>Add Extra Page — $10/mo</button>}
             <a className="btn secondary" href={`mailto:${supportEmail}?subject=Cookie%20Mini%20Website%20Builder%20Help`}>Contact Us</a>
             <button className="btn secondary" onClick={resetPages}>Reset Pages</button>
-            <a className="btn secondary" href={direct} target="_blank" rel="noreferrer">Open Direct Link</a>
-            <a className="btn secondary" href={subdomain} target="_blank" rel="noreferrer">Open Subdomain</a>
+            <a className="btn secondary" href={subdomain} target="_blank" rel="noreferrer">Open Live Website</a>
             <Link className="btn secondary" href="/customer">Back to Dashboard</Link>
           </div>
         </section>

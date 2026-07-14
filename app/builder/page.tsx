@@ -16,11 +16,27 @@ import {
   pageOptions,
   defaultPagesForTemplate,
   safeTemplateKey,
+  normalizePageContent,
+  normalizeServiceCards,
+  defaultOfferTitle,
+  pageCopy,
   type PlanKey,
   type TemplateKey,
-  type TemplateCategoryKey
+  type TemplateCategoryKey,
+  type ServiceCard,
+  type PageContentMap
 } from '@/lib/templates';
 import { CustomerSiteView } from '@/lib/site-view';
+
+function cloneServiceCards(cards: ServiceCard[]) {
+  const normalized = cards.map(card => ({ title: card.title || '', text: card.text || '' }));
+  while (normalized.length < 3) normalized.push({ title: `Offer ${normalized.length + 1}`, text: '' });
+  return normalized.slice(0, 3);
+}
+
+function buildStarterPageContent(): PageContentMap {
+  return normalizePageContent({}, pageOptions);
+}
 
 export default function BuilderPage() {
   const [step, setStep] = useState(0);
@@ -35,6 +51,11 @@ export default function BuilderPage() {
   const [primaryColor, setPrimaryColor] = useState(templates.food_realistic.defaultPrimary);
   const [accentColor, setAccentColor] = useState(templates.food_realistic.defaultAccent);
   const [selectedPages, setSelectedPages] = useState(['Home']);
+  const [offerTitle, setOfferTitle] = useState(defaultOfferTitle);
+  const [serviceCards, setServiceCards] = useState<ServiceCard[]>(cloneServiceCards(templates.food_realistic.services));
+  const [pageContent, setPageContent] = useState<PageContentMap>(buildStarterPageContent());
+  const [artTitle, setArtTitle] = useState(templates.food_realistic.art.label);
+  const [artDetails, setArtDetails] = useState(templates.food_realistic.art.details);
   const [formError, setFormError] = useState('');
   const [publishingFree, setPublishingFree] = useState(false);
   const [publishedLink, setPublishedLink] = useState('');
@@ -52,6 +73,10 @@ export default function BuilderPage() {
 
   const visibleTemplates = templateCatalog.filter(item => item.category === purpose);
   const selectedCategory = templateCategories.find(item => item.key === purpose) || templateCategories[0];
+  const previewPageContent = useMemo(() => ({
+    ...pageContent,
+    _art: { title: artTitle, details: artDetails }
+  }), [pageContent, artTitle, artDetails]);
 
   function applyTemplate(nextTemplate: TemplateKey) {
     const safeKey = safeTemplateKey(nextTemplate);
@@ -63,6 +88,11 @@ export default function BuilderPage() {
     setPrimaryColor(item.defaultPrimary);
     setAccentColor(item.defaultAccent);
     setSelectedPages(defaultPagesForTemplate(safeKey, plan));
+    setOfferTitle(defaultOfferTitle);
+    setServiceCards(cloneServiceCards(normalizeServiceCards(null, safeKey)));
+    setPageContent(buildStarterPageContent());
+    setArtTitle(item.art.label);
+    setArtDetails(item.art.details);
     setPublishedLink('');
     setPathLink('');
     setFormError('');
@@ -81,6 +111,28 @@ export default function BuilderPage() {
     setSelectedPages(defaultPagesForTemplate(template, nextPlan));
   }
 
+  function updateServiceCard(index: number, field: keyof ServiceCard, value: string) {
+    setServiceCards(current => {
+      const next = cloneServiceCards(current);
+      next[index] = { ...next[index], [field]: value };
+      return next;
+    });
+  }
+
+  function updatePageContent(page: string, field: 'title' | 'body', value: string) {
+    setPageContent(current => {
+      const fallback = pageCopy[page] || { title: page, body: '' };
+      const existing = current[page] || fallback;
+      return {
+        ...current,
+        [page]: {
+          title: field === 'title' ? value : (existing.title || fallback.title || page),
+          body: field === 'body' ? value : (existing.body || fallback.body || '')
+        }
+      };
+    });
+  }
+
   function togglePage(page: string) {
     if (page === 'Home') return;
     setFormError('');
@@ -97,9 +149,12 @@ export default function BuilderPage() {
   }
 
   function buildPayload() {
+    const contentToSave = { ...pageContent, _art: { title: artTitle, details: artDetails } };
+    const cardsToSave = cloneServiceCards(serviceCards);
     return {
       slug,
       businessName: cleanBusinessName,
+      business_name: cleanBusinessName,
       template,
       plan,
       headline,
@@ -111,8 +166,17 @@ export default function BuilderPage() {
       pages: plan === 'free' ? ['Home'] : normalizePages(selectedPages),
       billing: plan === 'free' ? 'free' : 'subscription',
       extraPageCount,
+      extra_page_count: extraPageCount,
       price: currentPrice,
+      monthly_price: currentPrice,
       priceLabel: currentBillingLabel,
+      price_label: currentBillingLabel,
+      offerTitle,
+      offer_title: offerTitle,
+      serviceCards: cardsToSave,
+      service_cards: cardsToSave,
+      pageContent: contentToSave,
+      page_content: contentToSave,
       createdAt: new Date().toISOString()
     };
   }
@@ -124,7 +188,7 @@ export default function BuilderPage() {
       return false;
     }
     if (!email.trim()) {
-      setFormError('Please add the customer email. This email lets the customer reopen their dashboard later.');
+      setFormError('Please add the customer email. This email is used for Contact Now and customer dashboard access.');
       setStep(1);
       return false;
     }
@@ -134,7 +198,7 @@ export default function BuilderPage() {
   async function publishFreePage() {
     if (!validateBeforePublish()) return;
     const payload = buildPayload();
-    const freePayload = { ...payload, pages: ['Home'], plan: 'free' as PlanKey, billing: 'free', price: 0, priceLabel: 'Free' };
+    const freePayload = { ...payload, pages: ['Home'], plan: 'free' as PlanKey, billing: 'free', price: 0, monthly_price: 0, priceLabel: 'Free', price_label: 'Free' };
     localStorage.setItem('cookie-builder-pending-site', JSON.stringify(freePayload));
     localStorage.setItem('cookie-builder-last-draft', JSON.stringify(freePayload));
     setPublishingFree(true);
@@ -172,7 +236,7 @@ export default function BuilderPage() {
     window.location.href = `/checkout?plan=${plan}&slug=${slug}`;
   }
 
-  const steps = ['Choose Website Type', 'Content', 'Design', 'Sections / Pages', plan === 'free' ? 'Preview & Publish Free' : 'Preview & Checkout'];
+  const steps = ['Choose Type & Look', 'Website Info', 'Design', 'Pages & Wording', plan === 'free' ? 'Preview & Publish Free' : 'Preview & Checkout'];
 
   return (
     <main className="builder-shell">
@@ -194,75 +258,102 @@ export default function BuilderPage() {
           </div>
         </div>}
         {step === 0 && (
-          <div>
-            <h3>Choose Website Type</h3>
-            <p className="small">Start with what the customer needs, then choose a visual style. Each type loads different sections, page names, wording prompts, and artwork.</p>
-            <div className="purpose-grid">
+          <div className="setup-step-card">
+            <h3>1. What type of website are they building?</h3>
+            <p className="small">The customer starts by choosing the purpose of the website. This loads the right pages, wording prompts, artwork, and service boxes.</p>
+            <div className="purpose-grid purpose-grid-wide">
               {templateCategories.map(item => (
                 <button className={`option purpose-option ${purpose === item.key ? 'active' : ''}`} key={item.key} onClick={() => changePurpose(item.key)}>
                   <strong>{item.name}</strong><br/><span className="small">{item.description}</span>
                 </button>
               ))}
             </div>
-            <h3 style={{marginTop: 16}}>Choose Style</h3>
-            <p className="small">{selectedCategory.name}: choose realistic, cartoon, floral, luxury, 3D, bold, warm, or clean options when available.</p>
-            <div className="template-grid rich-template-grid">
+            <h3 style={{marginTop: 18}}>2. Choose their website look/design</h3>
+            <p className="small">These are the visual styles for <strong>{selectedCategory.name}</strong>. Click one and the preview changes right away.</p>
+            <div className="visual-style-gallery">
               {visibleTemplates.map(item => (
-                <button className={`option rich-template-option ${template === item.key ? 'active' : ''}`} key={item.key} onClick={() => applyTemplate(item.key)}>
-                  <span className="template-thumb"><img src={item.art.image} alt="" /></span>
-                  <strong>{item.styleName}</strong>
-                  <span className="small">{item.name}</span>
+                <button className={`visual-style-card ${template === item.key ? 'active' : ''}`} key={item.key} onClick={() => applyTemplate(item.key)}>
+                  <span className="visual-style-image"><img src={item.art.image} alt="" /></span>
+                  <span className="visual-style-meta">
+                    <strong>{item.styleName}</strong>
+                    <small>{item.name}</small>
+                    <em style={{background: `linear-gradient(135deg, ${item.defaultPrimary}, ${item.defaultAccent})`}} />
+                  </span>
                 </button>
               ))}
             </div>
             <div className="field"><label>Plan</label><select value={plan} onChange={e => changePlan(e.target.value as PlanKey)}>
               {Object.entries(plans).map(([key, p]) => <option value={key} key={key}>{p.name} - {p.priceLabel} / {p.limitLabel}</option>)}
             </select></div>
-            <div className="notice">Free lets customers publish 1 branded page first. Paid plans unlock stronger professional websites. Extra pages for Starter or Business are {`$${EXTRA_PAGE_PRICE}/month per page`}.</div>
+            <div className="notice"><strong>Next:</strong> click <em>Website Info Next</em> and enter the customer’s business name, email, headline, description, offers, and page wording.</div>
           </div>
         )}
         {step === 1 && (
-          <div>
-            <h3>Content Next</h3>
-            <p className="small">Add the details customers will see on the website. The email is important for the customer dashboard.</p>
+          <div className="setup-step-card">
+            <h3>Website Info</h3>
+            <p className="small">This is where customers enter the information that builds the site. They can replace every example with their own business wording.</p>
             <div className="field"><label>Business / Website Name</label><input value={businessName} onChange={e => { setBusinessName(e.target.value); setFormError(''); }} placeholder="Example: Mary's Cleaning Service" /></div>
-            <div className="field"><label>Headline</label><textarea className="large-textarea" value={headline} onChange={e => setHeadline(e.target.value)} /></div>
-            <div className="field"><label>Description</label><textarea className="large-textarea tall-textarea" value={description} onChange={e => setDescription(e.target.value)} /></div>
+            <div className="field"><label>Email for Contact Button + Dashboard</label><input value={email} onChange={e => setEmail(e.target.value)} placeholder="customer@email.com" /></div>
             <div className="field"><label>Phone</label><input value={phone} onChange={e => setPhone(e.target.value)} placeholder="Optional. Shows in contact section only." /></div>
-            <div className="field"><label>Email</label><input value={email} onChange={e => setEmail(e.target.value)} placeholder="customer@email.com" /></div>
+            <div className="field"><label>Homepage Headline</label><textarea className="large-textarea" value={headline} onChange={e => setHeadline(e.target.value)} /></div>
+            <div className="field"><label>Homepage Description / Main Message</label><textarea className="large-textarea tall-textarea" value={description} onChange={e => setDescription(e.target.value)} /></div>
+            <div className="field"><label>Offer Section Title</label><input value={offerTitle} onChange={e => setOfferTitle(e.target.value)} placeholder="Example: What I Offer, My Menu, Packages, Services" /></div>
+            {serviceCards.map((card, index) => <div className="nested-edit-card" key={index}>
+              <h3>Offer Box {index + 1}</h3>
+              <div className="field"><label>Offer Title</label><input value={card.title} onChange={e => updateServiceCard(index, 'title', e.target.value)} placeholder="Example: Landing Pages" /></div>
+              <div className="field"><label>Offer Description</label><textarea className="large-textarea" value={card.text} onChange={e => updateServiceCard(index, 'text', e.target.value)} placeholder="Describe this product, service, menu item, package, or offer." /></div>
+            </div>)}
           </div>
         )}
         {step === 2 && (
-          <div>
-            <h3>Design Next</h3>
-            <p className="small">The template already includes artwork and a layout. Use colors to match the customer brand.</p>
+          <div className="setup-step-card">
+            <h3>Design</h3>
+            <p className="small">Customers can change their website type/look here too. The preview updates while they click.</p>
+            <div className="field"><label>Website Type</label><select value={purpose} onChange={e => changePurpose(e.target.value as TemplateCategoryKey)}>
+              {templateCategories.map(item => <option key={item.key} value={item.key}>{item.name}</option>)}
+            </select></div>
+            <div className="visual-style-gallery compact-style-gallery">
+              {visibleTemplates.map(item => <button type="button" className={`visual-style-card ${template === item.key ? 'active' : ''}`} key={item.key} onClick={() => applyTemplate(item.key)}>
+                <span className="visual-style-image"><img src={item.art.image} alt="" /></span>
+                <span className="visual-style-meta"><strong>{item.styleName}</strong><small>{item.name}</small></span>
+              </button>)}
+            </div>
             <div className="selected-template-card">
               <img src={templateData.art.image} alt="" />
               <div><strong>{templateData.name}</strong><br/><span className="small">{templateData.styleName} • {templateData.categoryName}</span></div>
             </div>
             <div className="field"><label>Main Color</label><input type="color" value={primaryColor} onChange={e => setPrimaryColor(e.target.value)} /></div>
             <div className="field"><label>Accent Color</label><input type="color" value={accentColor} onChange={e => setAccentColor(e.target.value)} /></div>
+            <div className="field"><label>Artwork Card Title</label><input value={artTitle} onChange={e => setArtTitle(e.target.value)} /></div>
+            <div className="field"><label>Artwork Card Details</label><textarea className="large-textarea" value={artDetails} onChange={e => setArtDetails(e.target.value)} /></div>
             <div className="notice">Current plan: <strong>{plans[plan].name}</strong><br />{plans[plan].creditsLabel}</div>
           </div>
         )}
         {step === 3 && (
-          <div>
-            <h3>Sections / Pages Next</h3>
-            <p className="small">{plan === 'free' ? 'Free includes Home only. Upgrade to add more pages.' : premiumUnlocksAll ? 'Premium includes every available page/section option shown here. Select all the customer needs.' : `${plans[plan].name} includes ${maxPages} page${maxPages > 1 ? 's' : ''}. Extra selected pages are $${EXTRA_PAGE_PRICE}/month per page.`}</p>
+          <div className="setup-step-card">
+            <h3>Pages & Wording</h3>
+            <p className="small">Choose pages, then type the customer’s information for each selected section. {plan === 'free' ? 'Free includes Home only.' : premiumUnlocksAll ? 'Premium includes all available pages/sections.' : `${plans[plan].name} includes ${maxPages} page${maxPages > 1 ? 's' : ''}. Extra pages are $${EXTRA_PAGE_PRICE}/month per page.`}</p>
             <div className="pages-grid">
               {pageOptions.map(page => {
                 const selected = selectedPages.includes(page);
                 const lockedByFree = plan === 'free' && page !== 'Home';
+                const nextCount = selected ? selectedPages.length - 1 : selectedPages.length + 1;
+                const extra = plan !== 'free' && !plans[plan].allPages ? getExtraPageCount(plan, nextCount) : 0;
                 return <button key={page} onClick={() => togglePage(page)} className={`option ${selected ? 'active' : ''} ${lockedByFree ? 'locked-option' : ''}`}>
-                  <strong>{page}</strong><br/><span className="small">{page === 'Home' ? 'Required' : selected ? 'Selected' : lockedByFree ? 'Upgrade to unlock' : (!premiumUnlocksAll && selectedPages.length >= maxPages) ? `$${EXTRA_PAGE_PRICE}/mo extra` : 'Add page'}</span>
+                  <strong>{page}</strong><br/><span className="small">{page === 'Home' ? 'Required' : selected ? 'Selected — click to remove' : lockedByFree ? 'Upgrade to unlock' : extra > 0 ? `$${EXTRA_PAGE_PRICE}/mo extra` : 'Add page'}</span>
                 </button>;
               })}
             </div>
-            <div style={{marginTop: 14}} className="notice">{plan === 'free' ? 'Free pages show Cookie branding. Upgrade to Starter, Business, or Premium to unlock a professional paid website.' : premiumUnlocksAll ? 'Premium unlocks all page/section choices in this builder for $50/month.' : `Extra pages selected: ${extraPageCount}. Extra page add-on: $${EXTRA_PAGE_PRICE}/month per page.`}</div>
+            <div style={{marginTop: 14}} className="notice">{plan === 'free' ? 'Free pages show Cookie branding. Upgrade to unlock more pages.' : premiumUnlocksAll ? 'Premium unlocks all page/section choices in this builder for $50/month.' : `Extra pages selected: ${extraPageCount}. Extra page add-on: $${EXTRA_PAGE_PRICE}/month per page.`}</div>
+            {selectedPages.filter(page => page !== 'Home').map(page => <div className="nested-edit-card" key={page}>
+              <h3>{page} Wording</h3>
+              <div className="field"><label>{page} Title</label><input value={pageContent[page]?.title || pageCopy[page]?.title || page} onChange={e => updatePageContent(page, 'title', e.target.value)} /></div>
+              <div className="field"><label>{page} Details</label><textarea className="large-textarea tall-textarea" value={pageContent[page]?.body || pageCopy[page]?.body || ''} onChange={e => updatePageContent(page, 'body', e.target.value)} placeholder={`Add the customer's ${page.toLowerCase()} information here.`} /></div>
+            </div>)}
           </div>
         )}
         {step === 4 && (
-          <div>
+          <div className="setup-step-card">
             <h3>{plan === 'free' ? 'Preview & Publish Free' : 'Preview & Checkout'}</h3>
             <p className="small">Review the website. Free pages publish immediately. Paid plans go to subscription checkout first.</p>
             <div className="checkout-summary">
@@ -280,7 +371,7 @@ export default function BuilderPage() {
         </div>
       </aside>
       <section className="preview-pane">
-        <CustomerSiteView businessName={cleanBusinessName} headline={headline} description={description} primaryColor={primaryColor} accentColor={accentColor} template={template} pages={plan === 'free' ? ['Home'] : selectedPages} phone={phone} email={email} plan={plan} previewLabel="Website Preview" />
+        <CustomerSiteView businessName={cleanBusinessName} headline={headline} description={description} primaryColor={primaryColor} accentColor={accentColor} template={template} pages={plan === 'free' ? ['Home'] : selectedPages} phone={phone} email={email} plan={plan} serviceCards={serviceCards} offerTitle={offerTitle} pageContent={previewPageContent} previewLabel="Website Preview" />
       </section>
     </main>
   );

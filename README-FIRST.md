@@ -1,25 +1,18 @@
-# Purpose-Based Template Library Upgrade
+Cookie Mini Website Builder Pro — Website Setup Flow Fix
 
-This update changes the builder from generic template color swaps into a purpose-based website setup.
+This update fixes the customer setup flow so customers can clearly:
 
-## What changed
+1. Choose what type of website they need.
+2. Choose the visual look/design for that website type.
+3. Enter their business information.
+4. Edit the offer/service boxes before publishing.
+5. Edit selected page wording before checkout/publish.
+6. See the preview while making changes.
+7. Save/publish the customer-specific content into Supabase.
 
-- Customers choose the website type first.
-- Each type has richer visual styles, including food art, flowers, buildings, realistic-style art, cartoon-style art, 3D-style art, luxury styling, and more.
-- Each type loads different suggested sections/pages.
-- Each type loads different default offer boxes and wording prompts.
-- Customer dashboard no longer shows the backup/direct link; the backup link should stay mostly for admin/troubleshooting.
-- Accent color remains active.
-- Free/Starter/Business/Premium page limits stay the same.
+Important notes:
+- No new Supabase migration is required if customer_content_fields_migration.sql has already been run.
+- The backup/direct link is removed from the customer edit controls. The customer sees the live subdomain link instead.
+- Admin can still use troubleshooting links separately if your admin page has them.
 
-## Upload steps
-
-1. Unzip this package.
-2. Upload the inside files/folders to GitHub.
-3. Commit changes.
-4. Wait for Vercel to redeploy and show Ready.
-5. Test: https://www.cookiesdigitalcreations.com/builder
-
-## Supabase
-
-No new Supabase migration is required for this update. It uses the existing template, pages, service_cards, page_content, colors, and published website fields.
+Upload the inside files/folders to GitHub, commit changes, and let Vercel redeploy.

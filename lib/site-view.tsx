@@ -91,7 +91,6 @@ export function CustomerSiteView(props: SiteViewProps) {
     <section id="home" className="site-hero" style={{background: `linear-gradient(135deg, ${primaryColor}, ${accentColor})`, color: 'white'}}>
       <div className="hero-content-block">
         {props.previewLabel && <div className="hero-kicker">{props.previewLabel}</div>}
-        <div className="template-purpose-pill">{template.categoryName} • {template.styleName}</div>
         <h1>{headline}</h1>
         <p className="hero-description" style={{color:'rgba(255,255,255,.92)'}}>{description}</p>
         <div className="hero-actions">
