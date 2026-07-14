@@ -1,21 +1,19 @@
-# Cookie Mini Website Builder Pro — Launch Pages + Legal Upgrade
+# Cookie Mini Website Builder Pro — Gallery Media + Builder Readability Fix
 
-This upgrade adds the public launch/business pages needed before sending real customers to the platform.
+This update adds media access for gallery-style pages and improves builder screen readability.
 
-## Added / updated
+## What changed
 
-- Polished homepage
-- Polished pricing page
-- New `/how-it-works` page
-- New `/faq` page
-- New `/contact` support page
-- New `/legal` policy hub
-- New `/terms` page
-- New `/privacy` page
-- New `/refund-policy` page
-- New `/subscription-policy` page
-- Footer links for support and policies
-- Customer-facing explanations for subscriptions, extra pages, Cookie Credits, and AI Video Studio
+- Gallery-style pages now allow customers to add images, videos, and media links.
+- Media controls show on pages like Gallery, Portfolio, Projects, Before & After, Products, and Menu.
+- Customers can upload small image/video files or paste a media link.
+- Uploaded media shows in the live preview and on the published customer website after Save & Republish.
+- Builder page uses a darker sidebar/background so text is easier to see.
+- Existing domain, Gumroad, Supabase, AI Video Studio, legal pages, and template setup are left alone.
+
+## Important note about video uploads
+
+This version stores small uploaded files inside the existing page content data, so keep uploads small. Larger videos should be added as links for now. A later upgrade can add Supabase Storage for larger video/image hosting.
 
 ## How to upload
 
@@ -26,17 +24,12 @@ This upgrade adds the public launch/business pages needed before sending real cu
 5. Click **Commit changes**.
 6. Wait for Vercel to deploy and show **Ready**.
 
-## Test links after deployment
+## Test
 
-- `https://www.cookiesdigitalcreations.com/`
-- `https://www.cookiesdigitalcreations.com/pricing`
-- `https://www.cookiesdigitalcreations.com/how-it-works`
-- `https://www.cookiesdigitalcreations.com/faq`
-- `https://www.cookiesdigitalcreations.com/contact`
-- `https://www.cookiesdigitalcreations.com/legal`
-- `https://www.cookiesdigitalcreations.com/terms`
-- `https://www.cookiesdigitalcreations.com/privacy`
-- `https://www.cookiesdigitalcreations.com/refund-policy`
-- `https://www.cookiesdigitalcreations.com/subscription-policy`
+- Open `https://www.cookiesdigitalcreations.com/builder`.
+- Choose a template with Gallery or add the Gallery page.
+- Add image/video/media link under Pages & Wording.
+- Preview it.
+- Publish or save and republish.
 
-No Supabase migration is required for this upgrade.
+No Supabase migration is required for this update.

@@ -101,7 +101,24 @@ export const pageOptions = [
 ];
 
 export type ServiceCard = { title: string; text: string };
-export type PageContentMap = Record<string, { title: string; body: string }>;
+export type PageMediaItem = { type: 'image' | 'video' | 'link'; url: string; name?: string };
+export type PageContentMap = Record<string, { title: string; body: string; media?: PageMediaItem[] }>;
+export const mediaEnabledPages = ['Gallery', 'Portfolio', 'Projects', 'Before & After', 'Products', 'Menu'] as const;
+
+export function pageSupportsMedia(page: string) {
+  return mediaEnabledPages.includes(page as any);
+}
+
+export function normalizePageMedia(value: any): PageMediaItem[] {
+  if (!Array.isArray(value)) return [];
+  return value.slice(0, 12).map((item: any) => {
+    const url = String(item?.url || '').trim();
+    const name = String(item?.name || '').trim();
+    const rawType = String(item?.type || '').toLowerCase();
+    const type = rawType === 'video' || rawType === 'link' ? rawType : 'image';
+    return url ? { type: type as PageMediaItem['type'], url, name } : null;
+  }).filter(Boolean) as PageMediaItem[];
+}
 export type TemplateCategoryKey =
   | 'food'
   | 'beauty'
@@ -775,6 +792,8 @@ export function normalizePageContent(value: any, pages: string[] = pageOptions):
       title: String(item.title || fallback.title || page),
       body: String(item.body || fallback.body || '')
     };
+    const media = normalizePageMedia(item.media);
+    if (media.length) result[page].media = media;
   }
   return result;
 }

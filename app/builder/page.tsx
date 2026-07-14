@@ -14,6 +14,7 @@ import {
   EXTRA_PAGE_PRICE,
   normalizePages,
   pageOptions,
+  pageSupportsMedia,
   defaultPagesForTemplate,
   safeTemplateKey,
   normalizePageContent,
@@ -24,6 +25,7 @@ import {
   type TemplateKey,
   type TemplateCategoryKey,
   type ServiceCard,
+  type PageMediaItem,
   type PageContentMap
 } from '@/lib/templates';
 import { CustomerSiteView } from '@/lib/site-view';
@@ -36,6 +38,25 @@ function cloneServiceCards(cards: ServiceCard[]) {
 
 function buildStarterPageContent(): PageContentMap {
   return normalizePageContent({}, pageOptions);
+}
+
+const MEDIA_UPLOAD_LIMIT_MB = 2;
+
+function mediaTypeFromFile(file: File): PageMediaItem['type'] {
+  return file.type.startsWith('video/') ? 'video' : 'image';
+}
+
+function readFileAsDataUrl(file: File) {
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ''));
+    reader.onerror = () => reject(new Error('Could not read this file.'));
+    reader.readAsDataURL(file);
+  });
+}
+
+function cleanMediaItems(value: any): PageMediaItem[] {
+  return Array.isArray(value) ? value.filter((item: any) => item?.url).slice(0, 12) : [];
 }
 
 export default function BuilderPage() {
@@ -126,11 +147,63 @@ export default function BuilderPage() {
       return {
         ...current,
         [page]: {
+          ...existing,
           title: field === 'title' ? value : (existing.title || fallback.title || page),
           body: field === 'body' ? value : (existing.body || fallback.body || '')
         }
       };
     });
+  }
+
+
+  function updatePageMedia(page: string, media: PageMediaItem[]) {
+    setPageContent(current => {
+      const fallback = pageCopy[page] || { title: page, body: '' };
+      const existing = current[page] || fallback;
+      return {
+        ...current,
+        [page]: {
+          ...existing,
+          title: existing.title || fallback.title || page,
+          body: existing.body || fallback.body || '',
+          media: cleanMediaItems(media)
+        }
+      };
+    });
+  }
+
+  async function addMediaFiles(page: string, files: FileList | null) {
+    const selected = Array.from(files || []);
+    if (!selected.length) return;
+    const tooLarge = selected.find(file => file.size > MEDIA_UPLOAD_LIMIT_MB * 1024 * 1024);
+    if (tooLarge) {
+      setFormError(`${tooLarge.name} is too large. Use files under ${MEDIA_UPLOAD_LIMIT_MB}MB for now, or add a video/photo link instead.`);
+      return;
+    }
+    try {
+      const nextItems: PageMediaItem[] = [];
+      for (const file of selected.slice(0, 6)) {
+        nextItems.push({ type: mediaTypeFromFile(file), url: await readFileAsDataUrl(file), name: file.name });
+      }
+      const currentMedia = cleanMediaItems(pageContent[page]?.media);
+      updatePageMedia(page, [...currentMedia, ...nextItems].slice(0, 12));
+      setFormError(`${nextItems.length} media item${nextItems.length > 1 ? 's' : ''} added to ${page}.`);
+    } catch {
+      setFormError('Something went wrong while adding media. Try a smaller image/video or use a media link.');
+    }
+  }
+
+  function addMediaLink(page: string) {
+    const url = window.prompt('Paste a YouTube, TikTok, Instagram, Vimeo, image, or video link:')?.trim();
+    if (!url) return;
+    const currentMedia = cleanMediaItems(pageContent[page]?.media);
+    updatePageMedia(page, [...currentMedia, { type: 'link', url, name: 'Media link' }].slice(0, 12));
+    setFormError(`Media link added to ${page}.`);
+  }
+
+  function removePageMedia(page: string, index: number) {
+    const currentMedia = cleanMediaItems(pageContent[page]?.media);
+    updatePageMedia(page, currentMedia.filter((_, i) => i !== index));
   }
 
   function togglePage(page: string) {
@@ -345,11 +418,23 @@ export default function BuilderPage() {
               })}
             </div>
             <div style={{marginTop: 14}} className="notice">{plan === 'free' ? 'Free pages show Cookie branding. Upgrade to unlock more pages.' : premiumUnlocksAll ? 'Premium unlocks all page/section choices in this builder for $50/month.' : `Extra pages selected: ${extraPageCount}. Extra page add-on: $${EXTRA_PAGE_PRICE}/month per page.`}</div>
-            {selectedPages.filter(page => page !== 'Home').map(page => <div className="nested-edit-card" key={page}>
-              <h3>{page} Wording</h3>
-              <div className="field"><label>{page} Title</label><input value={pageContent[page]?.title || pageCopy[page]?.title || page} onChange={e => updatePageContent(page, 'title', e.target.value)} /></div>
-              <div className="field"><label>{page} Details</label><textarea className="large-textarea tall-textarea" value={pageContent[page]?.body || pageCopy[page]?.body || ''} onChange={e => updatePageContent(page, 'body', e.target.value)} placeholder={`Add the customer's ${page.toLowerCase()} information here.`} /></div>
-            </div>)}
+            {selectedPages.filter(page => page !== 'Home').map(page => {
+              const media = cleanMediaItems(pageContent[page]?.media);
+              return <div className="nested-edit-card" key={page}>
+                <h3>{page} Wording</h3>
+                <div className="field"><label>{page} Title</label><input value={pageContent[page]?.title || pageCopy[page]?.title || page} onChange={e => updatePageContent(page, 'title', e.target.value)} /></div>
+                <div className="field"><label>{page} Details</label><textarea className="large-textarea tall-textarea" value={pageContent[page]?.body || pageCopy[page]?.body || ''} onChange={e => updatePageContent(page, 'body', e.target.value)} placeholder={`Add the customer's ${page.toLowerCase()} information here.`} /></div>
+                {pageSupportsMedia(page) && <div className="media-editor-box">
+                  <h4>Add images, videos, or media links</h4>
+                  <p className="small">Use this for gallery-style pages. Upload small images/videos or paste a video/photo link.</p>
+                  <div className="controls">
+                    <label className="btn secondary upload-button">Upload Media<input type="file" accept="image/*,video/*" multiple onChange={e => { addMediaFiles(page, e.currentTarget.files); e.currentTarget.value = ''; }} /></label>
+                    <button type="button" className="btn secondary" onClick={() => addMediaLink(page)}>Add Media Link</button>
+                  </div>
+                  {media.length > 0 && <div className="media-editor-grid">{media.map((item, index) => <div className="media-editor-item" key={`${item.url}-${index}`}><strong>{item.name || item.type}</strong><span>{item.type}</span><button type="button" onClick={() => removePageMedia(page, index)}>Remove</button></div>)}</div>}
+                </div>}
+              </div>;
+            })}
           </div>
         )}
         {step === 4 && (

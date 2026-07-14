@@ -12,12 +12,14 @@ import {
   normalizeServiceCards,
   pageCopy,
   pageOptions,
+  pageSupportsMedia,
   plans,
   templates,
   templateCatalog,
   templateCategories,
   safeTemplateKey,
   type PageContentMap,
+  type PageMediaItem,
   type PlanKey,
   type ServiceCard,
   type TemplateKey,
@@ -58,6 +60,25 @@ function cloneServiceCards(cards: ServiceCard[]) {
   const normalized = cards.map(card => ({ title: card.title || '', text: card.text || '' }));
   while (normalized.length < 3) normalized.push({ title: `Offer ${normalized.length + 1}`, text: '' });
   return normalized.slice(0, 3);
+}
+
+const MEDIA_UPLOAD_LIMIT_MB = 2;
+
+function mediaTypeFromFile(file: File): PageMediaItem['type'] {
+  return file.type.startsWith('video/') ? 'video' : 'image';
+}
+
+function readFileAsDataUrl(file: File) {
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ''));
+    reader.onerror = () => reject(new Error('Could not read this file.'));
+    reader.readAsDataURL(file);
+  });
+}
+
+function cleanMediaItems(value: any): PageMediaItem[] {
+  return Array.isArray(value) ? value.filter((item: any) => item?.url).slice(0, 12) : [];
 }
 
 function getRawContent(value: any) {
@@ -189,11 +210,66 @@ export default function CustomerEditSitePage({ params }: { params: { slug: strin
       const content = buildAllPageContent(current.pageContent || current.page_content);
       const fallback = pageCopy[page] || { title: page, body: '' };
       content[page] = {
+        ...content[page],
         title: field === 'title' ? value : (content[page]?.title || fallback.title || page),
         body: field === 'body' ? value : (content[page]?.body || fallback.body || '')
       };
       return { ...current, pageContent: content };
     });
+  }
+
+
+  function updatePageMedia(page: string, media: PageMediaItem[]) {
+    setSite((current: any) => {
+      if (!current) return current;
+      const content = buildAllPageContent(current.pageContent || current.page_content);
+      const fallback = pageCopy[page] || { title: page, body: '' };
+      content[page] = {
+        ...content[page],
+        title: content[page]?.title || fallback.title || page,
+        body: content[page]?.body || fallback.body || '',
+        media: cleanMediaItems(media)
+      };
+      return { ...current, pageContent: content };
+    });
+  }
+
+  async function addMediaFiles(page: string, files: FileList | null) {
+    if (!site) return;
+    const selected = Array.from(files || []);
+    if (!selected.length) return;
+    const tooLarge = selected.find(file => file.size > MEDIA_UPLOAD_LIMIT_MB * 1024 * 1024);
+    if (tooLarge) {
+      setMessage(`${tooLarge.name} is too large. Use files under ${MEDIA_UPLOAD_LIMIT_MB}MB for now, or add a video/photo link instead.`);
+      return;
+    }
+    try {
+      const nextItems: PageMediaItem[] = [];
+      for (const file of selected.slice(0, 6)) {
+        nextItems.push({ type: mediaTypeFromFile(file), url: await readFileAsDataUrl(file), name: file.name });
+      }
+      const currentMedia = cleanMediaItems(buildAllPageContent(site.pageContent || site.page_content)[page]?.media);
+      updatePageMedia(page, [...currentMedia, ...nextItems].slice(0, 12));
+      setMessage(`${nextItems.length} media item${nextItems.length > 1 ? 's' : ''} added to ${page}. Click Save & Republish to update the live website.`);
+    } catch {
+      setMessage('Something went wrong while adding media. Try a smaller image/video or use a media link.');
+    }
+  }
+
+  function addMediaLink(page: string) {
+    if (!site) return;
+    const url = window.prompt('Paste a YouTube, TikTok, Instagram, Vimeo, image, or video link:')?.trim();
+    if (!url) return;
+    const currentMedia = cleanMediaItems(buildAllPageContent(site.pageContent || site.page_content)[page]?.media);
+    updatePageMedia(page, [...currentMedia, { type: 'link', url, name: 'Media link' }].slice(0, 12));
+    setMessage(`Media link added to ${page}. Click Save & Republish to update the live website.`);
+  }
+
+  function removePageMedia(page: string, index: number) {
+    if (!site) return;
+    const currentMedia = cleanMediaItems(buildAllPageContent(site.pageContent || site.page_content)[page]?.media);
+    updatePageMedia(page, currentMedia.filter((_, i) => i !== index));
+    setMessage(`Media removed from ${page}. Click Save & Republish to update the live website.`);
   }
 
   function updateArtContent(field: 'title' | 'details', value: string) {
@@ -496,6 +572,15 @@ export default function CustomerEditSitePage({ params }: { params: { slug: strin
               <h3>{page} {selected ? <span className="small">— selected</span> : <span className="small">— saved for later</span>}</h3>
               <div className="field"><label>{page} Title</label><input value={getPageField(visiblePageContent, page, 'title')} onChange={e => updatePageContent(page, 'title', e.target.value)} placeholder={`${page} section title`} /></div>
               <div className="field"><label>{page} Wording</label><textarea className="large-textarea tall-textarea" value={getPageField(visiblePageContent, page, 'body')} onChange={e => updatePageContent(page, 'body', e.target.value)} placeholder={`Add the customer's ${page.toLowerCase()} information here.`} /></div>
+              {pageSupportsMedia(page) && <div className="media-editor-box">
+                <h4>Images, videos, and media links</h4>
+                <p className="small">Use this for gallery-style pages. Upload small images/videos, or paste a YouTube/TikTok/photo/video link.</p>
+                <div className="controls">
+                  <label className="btn secondary upload-button">Upload Media<input type="file" accept="image/*,video/*" multiple onChange={e => { addMediaFiles(page, e.currentTarget.files); e.currentTarget.value = ''; }} /></label>
+                  <button type="button" className="btn secondary" onClick={() => addMediaLink(page)}>Add Media Link</button>
+                </div>
+                {cleanMediaItems(visiblePageContent[page]?.media).length > 0 && <div className="media-editor-grid">{cleanMediaItems(visiblePageContent[page]?.media).map((item, index) => <div className="media-editor-item" key={`${item.url}-${index}`}><strong>{item.name || item.type}</strong><span>{item.type}</span><button type="button" onClick={() => removePageMedia(page, index)}>Remove</button></div>)}</div>}
+              </div>}
             </div>;
           })}
         </section>

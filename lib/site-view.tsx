@@ -9,7 +9,8 @@ import {
   safeTemplateKey,
   templateThemeClasses,
   templates,
-  type TemplateKey
+  type TemplateKey,
+  type PageMediaItem
 } from './templates';
 
 type SiteViewProps = {
@@ -43,6 +44,26 @@ function parsePageContent(value: any) {
     } catch {}
   }
   return {};
+}
+
+function renderMediaItem(item: PageMediaItem, index: number) {
+  const name = item.name || `Media ${index + 1}`;
+  if (item.type === 'video') {
+    return <div className="media-tile video-media" key={`${item.url}-${index}`}>
+      <video src={item.url} controls playsInline preload="metadata" />
+      <span>{name}</span>
+    </div>;
+  }
+  if (item.type === 'link') {
+    return <a className="media-tile link-media" href={item.url} target="_blank" rel="noreferrer" key={`${item.url}-${index}`}>
+      <strong>Open media link</strong>
+      <span>{name}</span>
+    </a>;
+  }
+  return <div className="media-tile image-media" key={`${item.url}-${index}`}>
+    <img src={item.url} alt={name} />
+    <span>{name}</span>
+  </div>;
 }
 
 export function CustomerSiteView(props: SiteViewProps) {
@@ -121,7 +142,7 @@ export function CustomerSiteView(props: SiteViewProps) {
         <div className="section-eyebrow">{page}</div>
         <h2>{copy.title}</h2>
         <p>{copy.body}</p>
-        {page === 'Gallery' && <div className="visual-gallery-strip"><img src={template.art.image} alt="" /><div /><div /></div>}
+        {copy.media?.length ? <div className="uploaded-media-grid">{copy.media.map((item: PageMediaItem, index: number) => renderMediaItem(item, index))}</div> : page === 'Gallery' ? <div className="visual-gallery-strip"><img src={template.art.image} alt="" /><div /><div /></div> : null}
         {page === 'Contact' && <div className="contact-panel">
           <strong>{businessName}</strong>
           {email && <a href={`mailto:${email}`}>{email}</a>}
