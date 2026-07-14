@@ -1,0 +1,77 @@
+COOKIE'S CASINO ARCADE — PLAYER ACCOUNT & SECURE WALLET SETUP
+
+THIS UPGRADE ADDS
+- Supabase email/password sign-up and sign-in
+- Player profile and unique player name
+- Secure server-side Cookie Coin wallet
+- Game-entry charges handled by Vercel Functions
+- Stripe purchases connected to the signed-in user's Supabase wallet
+- Coin transaction history
+- Cloud-saved VIP, XP, music, voice, and sound settings
+- Zero starting coins; players purchase coins through checkout
+
+STEP 1 — SUPABASE DATABASE
+1. Open your Supabase project.
+2. Open SQL Editor.
+3. Open supabase_setup.sql from this package.
+4. Copy all SQL into Supabase and click Run.
+5. In Authentication > Providers, keep Email enabled.
+6. Decide whether email confirmation should be required.
+7. In Authentication > URL Configuration:
+   - Site URL: your final Vercel URL
+   - Redirect URL: add your final Vercel URL
+
+STEP 2 — STRIPE PRODUCTS
+Create four one-time Stripe products/prices:
+- Starter: 500 coins — suggested $1.99
+- Player: 1,200 coins — suggested $3.99
+- High Roller: 3,000 coins — suggested $7.99
+- VIP: 7,500 coins — suggested $14.99
+
+Copy each Stripe Price ID.
+
+STEP 3 — GITHUB
+1. Create a new repository, or replace the files in your arcade repository.
+2. Upload the full contents of this folder.
+3. Commit the files.
+
+STEP 4 — VERCEL ENVIRONMENT VARIABLES
+Add every variable shown in .env.example:
+SUPABASE_URL
+SUPABASE_ANON_KEY
+SUPABASE_SERVICE_ROLE_KEY
+STRIPE_SECRET_KEY
+STRIPE_WEBHOOK_SECRET
+STRIPE_PRICE_STARTER
+STRIPE_PRICE_PLAYER
+STRIPE_PRICE_HIGH_ROLLER
+STRIPE_PRICE_VIP
+PUBLIC_SITE_URL
+
+Never place the service-role key or Stripe secret key inside index.html.
+
+STEP 5 — STRIPE WEBHOOK
+Create a Stripe webhook endpoint:
+https://YOUR-VERCEL-DOMAIN.vercel.app/api/stripe-webhook
+
+Select the event:
+checkout.session.completed
+
+Copy the webhook signing secret into STRIPE_WEBHOOK_SECRET.
+
+STEP 6 — DEPLOY AND TEST
+1. Deploy on Vercel.
+2. Create a new player account.
+3. Confirm the wallet begins at 0 coins.
+4. Use Stripe Test Mode to purchase a coin pack.
+5. Confirm coins appear in My Account.
+6. Enter a game and confirm the exact entry fee is deducted.
+7. Check Recent Coin Activity.
+
+SECURITY NOTES
+- Wallet balances are stored in Supabase, not trusted from browser storage.
+- The service-role key stays only inside Vercel Functions.
+- Wallet writes use an atomic database function and unique transaction references.
+- Stripe webhook transaction IDs prevent the same completed checkout from crediting twice.
+- Game rewards are capped server-side. For stronger anti-cheat protection later, each game's full match validation should also move to the server.
+- Cookie Coins are virtual entertainment credits with no cash value and no cash-out.

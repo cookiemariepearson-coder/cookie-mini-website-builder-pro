@@ -1,25 +1,12 @@
 {
-  "name": "cookie-mini-website-builder-pro",
-  "version": "1.3.0",
+  "name": "cookies-casino-arcade-player-accounts",
   "private": true,
-  "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start"
+  "type": "module",
+  "engines": {
+    "node": "22.x"
   },
   "dependencies": {
-    "@supabase/supabase-js": "2.49.1",
-    "next": "14.2.15",
-    "react": "18.3.1",
-    "react-dom": "18.3.1"
-  },
-  "devDependencies": {
-    "@types/node": "20.14.10",
-    "@types/react": "18.3.3",
-    "@types/react-dom": "18.3.0",
-    "typescript": "5.5.4"
-  },
-  "engines": {
-    "node": "20.x"
+    "@supabase/supabase-js": "^2.57.4",
+    "stripe": "^18.5.0"
   }
 }
