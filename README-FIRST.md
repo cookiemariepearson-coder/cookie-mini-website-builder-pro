@@ -1,31 +1,46 @@
-# Cookie Mini Website Builder Pro — Section Editor Hard Fix
+# Cookie Mini Website Builder Pro — Live Site Renderer Fix
 
-This package fixes the customer editor so the editable section boxes are actually visible and wired into Supabase.
+This fixes why the section edits looked like they were not working.
 
-## What this update fixes
+The customer editor was saving the editable fields, but the public live website route `/site/[slug]` was still using an old hardcoded layout. That old layout ignored:
 
-- Adds editable fields for the 3 offer/service boxes.
-- Adds editable fields for About, Services, Products, Gallery, Testimonials, Contact, and FAQ.
-- Adds editable fields for the 3D artwork card title/details.
-- Removes internal template badge wording from the live customer website hero.
-- Keeps the Contact Now button opening the customer email.
-- Makes accent color affect the public site through CSS variables.
-- Stops Business/Starter customers from silently adding extra pages without the add-on checkout.
-- Updates dashboard wording to say: Any issues, click the Contact Us button for help.
+- service/offer box edits
+- Services & Offers title edits
+- About, Services, Products, Gallery, Testimonials, Contact, and FAQ wording edits
+- 3D artwork card wording
+- the stronger accent color styling
 
-## Important Supabase step
+## What this package changes
 
-Run this file again in Supabase SQL Editor. It is safe to run again because it uses `add column if not exists`:
-
-supabase/customer_content_fields_migration.sql
+- Replaces `app/site/[slug]/page.tsx` so the live website renders through `CustomerSiteView`.
+- Keeps the section editor fields on `/customer/edit/[slug]`.
+- Keeps Supabase save/update routes for section content.
+- Keeps the 3D template/artwork and accent color changes.
+- Removes the old hardcoded "What We Offer" live-site output.
 
 ## Upload steps
 
 1. Unzip this package.
-2. In GitHub, open the `cookie-mini-website-builder-pro` repo.
-3. Click Code → Add file → Upload files.
-4. Upload the inside files/folders from this package.
-5. Commit changes.
-6. Wait for Vercel to deploy and show Ready.
-7. Test /customer/edit/customer-slug.
+2. Go to GitHub → `cookie-mini-website-builder-pro`.
+3. Click `Code → Add file → Upload files`.
+4. Upload the inside files/folders.
+5. Click `Commit changes`.
+6. Wait for Vercel to redeploy and show `Ready`.
 
+## Supabase step
+
+Run this SQL again if you are unsure it was run already. It is safe to run again:
+
+`supabase/customer_content_fields_migration.sql`
+
+## Test steps
+
+1. Open `https://www.cookiesdigitalcreations.com/customer`.
+2. Load the test website.
+3. Click `Edit Website Details`.
+4. Change one offer box title and description.
+5. Change the About wording.
+6. Change the accent color.
+7. Click `Save & Republish`.
+8. Open the direct link and subdomain link.
+9. Hard refresh the live site if needed.
