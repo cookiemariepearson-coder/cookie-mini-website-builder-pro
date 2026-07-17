@@ -1,9 +1,15 @@
 'use client';
+
 import { useMemo, useState } from 'react';
 import Nav from '../../lib/Nav';
 
 const planPrices = { free: 0, starter: 19, business: 30, premium: 50 };
-const planNames = { free: 'Free Launch Page', starter: 'Starter Pro', business: 'Business', premium: 'Premium' };
+const planNames = {
+  free: 'Free Launch Page',
+  starter: 'Starter Pro',
+  business: 'Business',
+  premium: 'Premium'
+};
 const statuses = ['published', 'paused', 'draft'];
 
 function siteUrl(slug) {
@@ -14,7 +20,7 @@ function directUrl(slug) {
   return `https://www.cookiesdigitalcreations.com/site/${slug}`;
 }
 
-function displayDate(value) {
+function fmtDate(value) {
   if (!value) return '—';
   try {
     return new Date(value).toLocaleString();
@@ -22,6 +28,26 @@ function displayDate(value) {
     return '—';
   }
 }
+
+const tabBtn = (active) => ({
+  border: active ? '2px solid #20172f' : '1px solid #ded5e7',
+  background: active ? '#20172f' : '#fff',
+  color: active ? '#fff' : '#20172f',
+  padding: '12px 16px',
+  borderRadius: 999,
+  fontWeight: 900,
+  cursor: 'pointer',
+  boxShadow: active ? '0 12px 30px rgba(32, 23, 47, .18)' : 'none'
+});
+
+const card = {
+  background: '#fff',
+  border: '1px solid #e7deef',
+  borderRadius: 22,
+  padding: 22,
+  boxShadow: '0 18px 45px rgba(32,23,47,.08)',
+  marginBottom: 18
+};
 
 export default function Admin() {
   const [pin, setPin] = useState('');
@@ -35,35 +61,45 @@ export default function Admin() {
   async function load() {
     setLoading(true);
     setMsg('Loading admin dashboard...');
-    const r = await fetch('/api/admin/list', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ pin })
-    });
-    const d = await r.json();
-    setLoading(false);
-    if (d.ok) {
-      setSites(d.sites || []);
-      setMsg('Admin dashboard loaded.');
-    } else {
-      setMsg(d.error || 'Unable to load admin dashboard.');
+    try {
+      const r = await fetch('/api/admin/list', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pin })
+      });
+      const d = await r.json();
+      if (d.ok) {
+        setSites(d.sites || []);
+        setMsg('Admin Plan Management v2 loaded. Use the tabs below to manage websites, plans, and notes.');
+      } else {
+        setMsg(d.error || 'Unable to load admin dashboard.');
+      }
+    } catch (e) {
+      setMsg(e.message || 'Unable to load admin dashboard.');
+    } finally {
+      setLoading(false);
     }
   }
 
   async function update(slug, updates, quiet = false) {
     setSavingSlug(slug);
-    const r = await fetch('/api/admin/update', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ pin, slug, updates })
-    });
-    const d = await r.json();
-    setSavingSlug('');
-    if (d.ok) {
-      if (!quiet) setMsg('Saved admin change.');
-      await load();
-    } else {
-      setMsg(d.error || 'Unable to update website.');
+    try {
+      const r = await fetch('/api/admin/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pin, slug, updates })
+      });
+      const d = await r.json();
+      if (d.ok) {
+        if (!quiet) setMsg('Saved admin change.');
+        await load();
+      } else {
+        setMsg(d.error || 'Unable to update website.');
+      }
+    } catch (e) {
+      setMsg(e.message || 'Unable to update website.');
+    } finally {
+      setSavingSlug('');
     }
   }
 
@@ -83,11 +119,12 @@ export default function Admin() {
   }, [sites, search]);
 
   const stats = useMemo(() => {
-    const published = sites.filter((s) => s.status === 'published');
+    const published = sites.filter((s) => (s.status || 'published') === 'published');
     const paused = sites.filter((s) => s.status === 'paused');
     const free = sites.filter((s) => (s.plan || 'free') === 'free');
     const mrr = published.reduce((sum, s) => {
-      const base = Number(s.monthly_price ?? planPrices[s.plan] ?? 0);
+      const plan = s.plan || 'free';
+      const base = Number(s.monthly_price ?? planPrices[plan] ?? 0);
       const extra = Number(s.extra_pages || 0) * 10;
       return sum + base + extra;
     }, 0);
@@ -99,10 +136,10 @@ export default function Admin() {
       <Nav />
       <main className="wrap dashboard">
         <span className="kicker">Owner dashboard</span>
-        <h1>Admin Plan Management</h1>
-        <p>Manage customer websites, plans, extra pages, notes, and paused/published status.</p>
+        <h1>Admin Plan Management v2</h1>
+        <p>Use the tabs to manage customer websites, plans, extra pages, notes, and pause/reactivate status.</p>
 
-        <section className="card">
+        <section style={card}>
           <div className="row">
             <div className="field">
               <label>Admin PIN</label>
@@ -116,6 +153,16 @@ export default function Admin() {
           {msg && <div className="notice">{msg}</div>}
         </section>
 
+        <section style={{ ...card, background: '#f7f1ff' }}>
+          <h2 style={{ marginTop: 0 }}>Admin Sections</h2>
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+            <button style={tabBtn(tab === 'websites')} onClick={() => setTab('websites')}>1. Websites</button>
+            <button style={tabBtn(tab === 'plans')} onClick={() => setTab('plans')}>2. Plans & Status</button>
+            <button style={tabBtn(tab === 'notes')} onClick={() => setTab('notes')}>3. Admin Notes</button>
+            <button style={tabBtn(tab === 'help')} onClick={() => setTab('help')}>4. How to Use</button>
+          </div>
+        </section>
+
         <div className="cardGrid">
           <div className="card"><strong>Total Sites</strong><div className="price">{stats.total}</div></div>
           <div className="card"><strong>Published</strong><div className="price">{stats.published}</div></div>
@@ -124,29 +171,28 @@ export default function Admin() {
           <div className="card"><strong>Estimated Active MRR</strong><div className="price">${stats.mrr}/mo</div></div>
         </div>
 
-        <div className="pillTabs">
-          <button className={tab === 'websites' ? 'active' : ''} onClick={() => setTab('websites')}>Websites</button>
-          <button className={tab === 'plans' ? 'active' : ''} onClick={() => setTab('plans')}>Plans & Status</button>
-          <button className={tab === 'notes' ? 'active' : ''} onClick={() => setTab('notes')}>Admin Notes</button>
-          <button className={tab === 'help' ? 'active' : ''} onClick={() => setTab('help')}>How to Use</button>
-        </div>
-
-        <section className="card">
+        <section style={card}>
           <div className="row">
-            <h2>Customer Websites</h2>
+            <h2 style={{ margin: 0 }}>
+              {tab === 'websites' && 'Websites'}
+              {tab === 'plans' && 'Plans & Status'}
+              {tab === 'notes' && 'Admin Notes'}
+              {tab === 'help' && 'How to Use'}
+            </h2>
             <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search name, slug, email, plan, status, or note" />
           </div>
         </section>
 
         {tab === 'websites' && (
-          <section className="card">
-            <h2>Websites</h2>
+          <section style={card}>
+            <h2>Customer Websites</h2>
+            <p>Open, edit, pause, or reactivate published customer websites. The backup link is admin-only for troubleshooting.</p>
             <div className="tableWrap">
               <table className="table">
                 <thead><tr><th>Website</th><th>Email</th><th>Plan</th><th>Status</th><th>Actions</th></tr></thead>
                 <tbody>{filtered.map((s) => (
                   <tr key={s.slug}>
-                    <td><strong>{s.business_name || s.slug}</strong><br /><small>{s.slug}.cookiesdigitalcreations.com</small><br /><small>Updated: {displayDate(s.updated_at)}</small></td>
+                    <td><strong>{s.business_name || s.slug}</strong><br /><small>{s.slug}.cookiesdigitalcreations.com</small><br /><small>Updated: {fmtDate(s.updated_at)}</small></td>
                     <td>{s.customer_email || '—'}</td>
                     <td>{planNames[s.plan] || s.plan || 'Free Launch Page'}</td>
                     <td>{s.status || 'published'}</td>
@@ -168,7 +214,7 @@ export default function Admin() {
         )}
 
         {tab === 'plans' && (
-          <section className="card">
+          <section style={card}>
             <h2>Plans & Status Controls</h2>
             <p>Use this when someone upgrades, cancels, buys an extra page, or needs their site paused/reactivated.</p>
             <div className="tableWrap">
@@ -181,26 +227,25 @@ export default function Admin() {
                       <select value={s.plan || 'free'} onChange={(e) => {
                         const plan = e.target.value;
                         patchLocal(s.slug, { plan, monthly_price: planPrices[plan] || 0 });
-                        update(s.slug, { plan, monthly_price: planPrices[plan] || 0 }, true);
                       }}>
                         {Object.keys(planNames).map((p) => <option key={p} value={p}>{planNames[p]}</option>)}
                       </select>
                     </td>
                     <td>
-                      <select value={s.status || 'published'} onChange={(e) => {
-                        patchLocal(s.slug, { status: e.target.value });
-                        update(s.slug, { status: e.target.value }, true);
-                      }}>
+                      <select value={s.status || 'published'} onChange={(e) => patchLocal(s.slug, { status: e.target.value })}>
                         {statuses.map((p) => <option key={p} value={p}>{p}</option>)}
                       </select>
                     </td>
+                    <td><input style={{ width: 90 }} type="number" min="0" value={s.extra_pages || 0} onChange={(e) => patchLocal(s.slug, { extra_pages: Number(e.target.value) })} /></td>
+                    <td><input style={{ width: 110 }} type="number" min="0" value={s.monthly_price ?? planPrices[s.plan || 'free'] ?? 0} onChange={(e) => patchLocal(s.slug, { monthly_price: Number(e.target.value) })} /></td>
                     <td>
-                      <input style={{ width: 90 }} type="number" min="0" value={s.extra_pages || 0} onChange={(e) => patchLocal(s.slug, { extra_pages: Number(e.target.value) })} />
+                      <button className="btn" onClick={() => update(s.slug, {
+                        plan: s.plan || 'free',
+                        status: s.status || 'published',
+                        extra_pages: Number(s.extra_pages || 0),
+                        monthly_price: Number(s.monthly_price ?? planPrices[s.plan || 'free'] ?? 0)
+                      })}>{savingSlug === s.slug ? 'Saving...' : 'Save'}</button>
                     </td>
-                    <td>
-                      <input style={{ width: 110 }} type="number" min="0" value={s.monthly_price ?? planPrices[s.plan] ?? 0} onChange={(e) => patchLocal(s.slug, { monthly_price: Number(e.target.value) })} />
-                    </td>
-                    <td><button className="btn" onClick={() => update(s.slug, { extra_pages: s.extra_pages || 0, monthly_price: s.monthly_price ?? planPrices[s.plan] ?? 0 })}>{savingSlug === s.slug ? 'Saving...' : 'Save'}</button></td>
                   </tr>
                 ))}</tbody>
               </table>
@@ -209,7 +254,7 @@ export default function Admin() {
         )}
 
         {tab === 'notes' && (
-          <section className="card">
+          <section style={card}>
             <h2>Admin Notes</h2>
             <p>Private notes only you see. Use this for payment issues, support notes, cancellation dates, or extra-page tracking.</p>
             <div className="cardGrid oneCol">
@@ -226,13 +271,13 @@ export default function Admin() {
         )}
 
         {tab === 'help' && (
-          <section className="card">
+          <section style={card}>
             <h2>How to use this admin dashboard</h2>
             <p><strong>Published</strong> websites open publicly. <strong>Paused</strong> websites should not open publicly. Use Pause if someone cancels or payment fails.</p>
             <p><strong>Plan</strong> controls what the customer should have: Free, Starter Pro, Business, or Premium.</p>
             <p><strong>Extra Pages</strong> should match how many $10/month extra page add-ons they purchased.</p>
+            <p><strong>Admin Notes</strong> are private notes for you only.</p>
             <p>Until Gumroad webhooks are connected, plan changes and cancellations are handled manually here.</p>
-            <p>The customer-facing dashboard should show the main subdomain link only. The backup link is for you inside admin.</p>
           </section>
         )}
       </main>

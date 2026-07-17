@@ -7,13 +7,11 @@ export async function POST(req) {
     if (pin !== process.env.ADMIN_PIN) {
       return NextResponse.json({ ok: false, error: 'Invalid PIN' }, { status: 401 });
     }
-
     const supabase = getSupabaseAdmin();
     const { data, error } = await supabase
       .from('websites')
       .select('*')
       .order('updated_at', { ascending: false });
-
     if (error) throw error;
     return NextResponse.json({ ok: true, sites: data || [] });
   } catch (e) {
