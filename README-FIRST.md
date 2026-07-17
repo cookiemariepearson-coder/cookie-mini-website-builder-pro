@@ -17,3 +17,4 @@ This upgrade adds:
 - MRR estimate
 
 No new Vercel environment variables are required.
+
