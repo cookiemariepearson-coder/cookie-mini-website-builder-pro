@@ -1,21 +1,19 @@
-# Paid Checkout + Admin Plan Fix
+Cookie Mini Website Builder Pro — Admin Plan Management Upgrade
 
-Upload the inside files/folders to the root of your GitHub repo, then commit changes and wait for Vercel to redeploy.
+Upload the inside folders/files to the clean GitHub repo and commit changes.
 
-This update fixes paid checkout buttons that were giving a 404 by routing paid plans through:
-- /checkout/starter
-- /checkout/business
-- /checkout/premium
-- /checkout/extra
+Before testing admin notes, run this SQL in Supabase SQL Editor:
 
-Those routes normalize Gumroad links and add https:// automatically if needed.
+supabase/admin_plan_management_migration.sql
 
-Still make sure your Vercel Environment Variable values are full Gumroad links, ideally like:
-https://cookiepearson.gumroad.com/l/your-product?wanted=true
+This upgrade adds:
+- Stronger /admin plan management dashboard
+- Plan controls: Free / Starter / Business / Premium
+- Status controls: published / paused / draft
+- Extra page count
+- Monthly price field
+- Admin-only backup link
+- Private admin notes
+- MRR estimate
 
-This update also organizes the admin page into tabs:
-- Websites
-- Plans & Status
-- Admin Notes
-
-Do not change IONOS, domain settings, Supabase keys, or Gumroad return links for this fix.
+No new Vercel environment variables are required.
