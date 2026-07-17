@@ -9,3 +9,4 @@ Fixes included:
 - Fixes the TypeScript build issue that caused the latest Vercel deployment to fail.
 
 Upload the inside files/folders to GitHub, commit changes, and let Vercel deploy. Do not change IONOS, Supabase, Gumroad, or domain settings.
+deployment refresh
