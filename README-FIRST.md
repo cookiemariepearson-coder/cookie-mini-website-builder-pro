@@ -1,12 +1,21 @@
-Cookie Mini Website Builder Pro — Gallery Media Build Fix
+# Paid Checkout + Admin Plan Fix
 
-This replaces the Gallery Media + Builder Readability update with a build-safe version.
+Upload the inside files/folders to the root of your GitHub repo, then commit changes and wait for Vercel to redeploy.
 
-Fixes included:
-- Keeps gallery/image/video upload fields.
-- Keeps media links for YouTube, TikTok, Instagram, Vimeo, images, and videos.
-- Keeps darker builder readability styles.
-- Fixes the TypeScript build issue that caused the latest Vercel deployment to fail.
+This update fixes paid checkout buttons that were giving a 404 by routing paid plans through:
+- /checkout/starter
+- /checkout/business
+- /checkout/premium
+- /checkout/extra
 
-Upload the inside files/folders to GitHub, commit changes, and let Vercel deploy. Do not change IONOS, Supabase, Gumroad, or domain settings.
-deployment refresh
+Those routes normalize Gumroad links and add https:// automatically if needed.
+
+Still make sure your Vercel Environment Variable values are full Gumroad links, ideally like:
+https://cookiepearson.gumroad.com/l/your-product?wanted=true
+
+This update also organizes the admin page into tabs:
+- Websites
+- Plans & Status
+- Admin Notes
+
+Do not change IONOS, domain settings, Supabase keys, or Gumroad return links for this fix.
