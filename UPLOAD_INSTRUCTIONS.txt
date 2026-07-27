@@ -1,0 +1,35 @@
+COOKIE DIGITAL CREATIONS — AI-READY HOMEPAGE UPDATE
+
+Repository:
+cookiemariepearson-coder/cookie-mini-website-builder-pro-clean
+
+This package contains five files for the existing app folder:
+
+app/page.js
+app/layout.js
+app/ai-commerce-home.css
+app/robots.js
+app/sitemap.js
+
+UPLOAD
+
+1. Open the repository on GitHub.
+2. Select Add file, then Upload files.
+3. Extract this ZIP on your computer.
+4. Drag the extracted app folder into the GitHub upload area.
+5. Confirm that page.js and layout.js are shown as replacements and the other three files are shown as new.
+6. Use the commit message:
+   Add AI-ready homepage commerce and FAQ
+7. Commit directly to main.
+
+After GitHub saves the files, the connected Vercel project should deploy automatically.
+
+WHAT THIS UPDATE ADDS
+
+- A For Creators & Businesses section explaining DIY and done-for-you choices
+- AI-ready positioning without promising AI placement or recommendations
+- An accessible Questions? We’ve Got Answers FAQ in the requested homepage position
+- Public business email: hello@cookiesdigitalcreations.com
+- Organization, website, service, and FAQ machine-readable data
+- Improved title, description, canonical, and social metadata
+- robots.txt and sitemap.xml generation
