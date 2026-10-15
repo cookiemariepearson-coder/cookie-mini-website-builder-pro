@@ -270,13 +270,14 @@ export default function BuilderPage() {
       if (name) setBusinessName(name);
       const categoryText = industry.toLowerCase();
       const category: TemplateCategoryKey = /beauty|hair|salon|nail|makeup|fashion/.test(categoryText) ? 'beauty'
-        : /real estate|realtor|property/.test(categoryText) ? 'realty'
-        : /wellness|health|fitness|coach|therapy/.test(categoryText) ? 'wellness'
-        : /clean|janitorial|home service/.test(categoryText) ? 'services'
-        : /digital|software|design|marketing|creator|consult/.test(categoryText) ? 'digital'
+        : /real estate|realtor|property/.test(categoryText) ? 'realestate'
+        : /wellness|health|fitness|therapy/.test(categoryText) ? 'wellness'
+        : /coach|consult/.test(categoryText) ? 'coaching'
+        : /clean|janitorial|home service/.test(categoryText) ? 'cleaning'
+        : /digital|software|design|marketing|creator/.test(categoryText) ? 'digitalproducts'
         : /film|video|photo|portfolio/.test(categoryText) ? 'portfolio'
         : /restaurant|food|catering|bakery|chef/.test(categoryText) ? 'food'
-        : 'services';
+        : 'localservices';
       const matchingTemplate = templateCatalog.find(item => item.category === category);
       if (matchingTemplate) applyTemplate(matchingTemplate.key);
       if (goal) {
