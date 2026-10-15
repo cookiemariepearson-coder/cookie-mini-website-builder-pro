@@ -254,6 +254,43 @@ export default function BuilderPage() {
     };
   }
 
+  async function importBusinessHandoff(file: File | null) {
+    if (!file) return;
+    try {
+      if (file.size > 1024 * 1024) throw new Error('That import file is too large. Choose the JSON file downloaded from Cookie AI Business in a Box.');
+      const parsed = JSON.parse(await file.text());
+      if (parsed?.format !== 'cookies-digital-creations-business-handoff' || parsed?.version !== 1 || !parsed?.business) {
+        throw new Error('This file is not a recognized Cookie AI business import. Download the Builder Import file from Cookie AI Business in a Box and try again.');
+      }
+      const business = parsed.business;
+      const name = typeof business.name === 'string' ? business.name.trim().slice(0, 120) : '';
+      const industry = typeof business.industry === 'string' ? business.industry.trim().slice(0, 120) : '';
+      const goal = typeof business.goal === 'string' ? business.goal.trim().slice(0, 1500) : '';
+      const websiteCopy = typeof business.websiteCopy === 'string' ? business.websiteCopy.trim().slice(0, 5000) : '';
+      if (name) setBusinessName(name);
+      const categoryText = industry.toLowerCase();
+      const category: TemplateCategoryKey = /beauty|hair|salon|nail|makeup|fashion/.test(categoryText) ? 'beauty'
+        : /real estate|realtor|property/.test(categoryText) ? 'realty'
+        : /wellness|health|fitness|coach|therapy/.test(categoryText) ? 'wellness'
+        : /clean|janitorial|home service/.test(categoryText) ? 'services'
+        : /digital|software|design|marketing|creator|consult/.test(categoryText) ? 'digital'
+        : /film|video|photo|portfolio/.test(categoryText) ? 'portfolio'
+        : /restaurant|food|catering|bakery|chef/.test(categoryText) ? 'food'
+        : 'services';
+      const matchingTemplate = templateCatalog.find(item => item.category === category);
+      if (matchingTemplate) applyTemplate(matchingTemplate.key);
+      if (goal) {
+        setHeadline(name ? `Welcome to ${name}` : 'Welcome to my business');
+        setDescription(goal);
+      }
+      if (business.tool === 'website' && websiteCopy) setDescription(websiteCopy);
+      setStep(1);
+      setFormError('Business details imported. Review the name and wording, add the required contact email, and edit anything before publishing.');
+    } catch (error: any) {
+      setFormError(error?.message || 'Could not read this import file. Please download a fresh Builder Import file and try again.');
+    }
+  }
+
   function validateBeforePublish() {
     if (!businessName.trim()) {
       setFormError('Please add the business name before publishing or checkout.');
@@ -366,6 +403,11 @@ export default function BuilderPage() {
           <div className="setup-step-card">
             <h3>Website Info</h3>
             <p className="small">This is where customers enter the information that builds the site. They can replace every example with their own business wording.</p>
+            <div className="notice handoff-import-box">
+              <strong>✨ Already started with Cookie AI Business in a Box?</strong>
+              <p className="small">Import the JSON file you downloaded there to prefill your business name, industry-based design suggestion, and starting wording. You stay in control and can edit everything before publishing.</p>
+              <label className="btn secondary upload-button">Import business details<input type="file" accept=".json,application/json" onChange={e => { void importBusinessHandoff(e.currentTarget.files?.[0] || null); e.currentTarget.value = ''; }} /></label>
+            </div>
             <div className="field"><label>Business / Website Name</label><input value={businessName} onChange={e => { setBusinessName(e.target.value); setFormError(''); }} placeholder="Example: Mary's Cleaning Service" /></div>
             <div className="field"><label>Email for Contact Button + Dashboard</label><input value={email} onChange={e => setEmail(e.target.value)} placeholder="customer@email.com" /></div>
             <div className="field"><label>Phone</label><input value={phone} onChange={e => setPhone(e.target.value)} placeholder="Optional. Shows in contact section only." /></div>
