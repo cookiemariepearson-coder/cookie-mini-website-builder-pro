@@ -364,10 +364,12 @@ export default function BuilderPage() {
         </div>
         {formError && <div className={formError.includes('published') ? 'notice' : 'notice danger'}>{formError}</div>}
         {publishedLink && <div className="notice success-notice">
-          <strong>Free page is live:</strong><br />{publishedLink}
+          <strong>🎉 Your free page is live!</strong><br />{publishedLink}
           <div className="controls" style={{marginTop: 12}}>
             <a className="btn gold" href={`https://${publishedLink}`} target="_blank" rel="noreferrer">Open Free Website</a>
+            <a className="btn secondary" href="https://connect.cookiesdigitalcreations.com/" target="_blank" rel="noreferrer">Explore Cookie Connect ↗</a>
           </div>
+          <p className="small" style={{marginTop:10}}>Want more people to discover your business? Explore Cookie Connect and review its listing options. Your website is not automatically submitted as a public listing.</p>
         </div>}
         {step === 0 && (
           <div className="setup-step-card">
